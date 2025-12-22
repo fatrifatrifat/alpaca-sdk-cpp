@@ -5,5 +5,9 @@
 int main() {
   auto env = alpaca::Environment();
   auto market = alpaca::MarketDataClient(env);
-  market.GetBars({"AAPL"});
+  auto resp = market.GetBars({"AAPL"});
+  if (!resp) {
+    std::println("{}", resp.error());
+    return 1;
+  }
 }

@@ -29,6 +29,7 @@ public:
 
   struct Bars {
     std::map<std::string, std::vector<Bar>> bars;
+    std::optional<std::string> next_page_token;
   };
 
 private:
@@ -54,26 +55,21 @@ public:
   explicit MarketDataClient(Environment &env)
       : env_(env), cli_(env_.GetDataUrl()) {}
 
-  Bars GetBars(const BarParams &p) {
+  std::expected<Bars, std::string> GetBars(const BarParams &p) {
     if (p.symbol.empty()) {
-      std::println("Error: Empty symbol");
-      return {};
+      return std::unexpected("Error: Empty symbol");
     }
     if (p.timeframe.empty()) {
-      std::println("Error: Empty timeframe");
-      return {};
+      return std::unexpected("Error: Empty timeframe");
     }
     if (p.start.empty() || p.end.empty()) {
-      std::println("Error: Empty start/end");
-      return {};
+      return std::unexpected("Error: Empty start/end");
     }
     if (p.limit <= 0) {
-      std::println("Error: limit must be > 0");
-      return {};
+      return std::unexpected("Error: Empty limit");
     }
     if (p.feed.empty()) {
-      std::println("Error: Empty feed");
-      return {};
+      return std::unexpected("Error: Empty feed");
     }
 
     const std::string query = build_query({
@@ -88,23 +84,21 @@ public:
     std::println("{}", query);
     auto resp = cli_.Get(BARS_ENDPOINT + query, env_.GetAuthHeaders());
     if (!resp) {
-      std::println("{}", resp.error());
-      return {};
+      return std::unexpected(std::format("Error: {}", resp.error()));
     }
 
     if (resp->status != 200) {
-      std::println("Error Code: {}", resp->status);
-      return {};
+      return std::unexpected(std::format("Error Code: {}", resp->status));
     }
 
     std::println("{}", resp->body);
     Bars bars;
     auto error = glz::read_json(bars, resp->body);
     if (error) {
-      std::println("Error JsonParsing: {}",
-                   glz::format_error(error, resp->body));
-      return {};
+      return std::unexpected(
+          std::format("Error Code: {}", glz::format_error(error, resp->body)));
     }
+
     return bars;
   }
 
@@ -118,15 +112,18 @@ private:
 }; // namespace alpaca
 
 namespace glz {
+
+template <> struct meta<alpaca::MarketDataClient::Bars> {
+  using T = alpaca::MarketDataClient::Bars;
+  static constexpr auto value =
+      object("bars", &T::bars, "next_page_token", &T::next_page_token);
+};
+
 template <> struct meta<alpaca::MarketDataClient::Bar> {
   using T = alpaca::MarketDataClient::Bar;
   static constexpr auto value =
       object("c", &T::c, "h", &T::h, "l", &T::l, "n", &T::n, "o", &T::o, "t",
-             &T::t, "v", &T::v, "n", &T::n);
+             &T::t, "v", &T::v, "vw", &T::vw);
 };
 
-template <> struct meta<alpaca::MarketDataClient::Bars> {
-  using T = alpaca::MarketDataClient::Bars;
-  static constexpr auto value = object("bars", &T::bars);
-};
 }; // namespace glz
