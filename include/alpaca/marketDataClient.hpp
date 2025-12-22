@@ -27,9 +27,18 @@ public:
     std::string feed = "sip";
   };
 
+  struct LatestBarParam {
+    std::string symbol;
+    std::string feed = "delayed_sip";
+  };
+
   struct Bars {
     std::map<std::string, std::vector<Bar>> bars;
     std::optional<std::string> next_page_token;
+  };
+
+  struct LatestBars {
+    std::map<std::string, Bar> bars;
   };
 
 private:
@@ -102,11 +111,46 @@ public:
     return bars;
   }
 
+  std::expected<LatestBars, std::string> GetLatestBar(const LatestBarParam &p) {
+    if (p.symbol.empty()) {
+      return std::unexpected("Error: Empty symbol");
+    }
+    if (p.feed.empty()) {
+      return std::unexpected("Error: Empty feed");
+    }
+
+    const std::string query = build_query({
+        {"symbols", p.symbol},
+        {"feed", p.feed},
+    });
+
+    std::println("{}", query);
+    auto resp = cli_.Get(LATEST_BARS_ENDPOINT + query, env_.GetAuthHeaders());
+    if (!resp) {
+      return std::unexpected(std::format("Error: {}", resp.error()));
+    }
+
+    if (resp->status != 200) {
+      return std::unexpected(std::format("Error Code: {}", resp->status));
+    }
+
+    std::println("{}", resp->body);
+    LatestBars bars;
+    auto error = glz::read_json(bars, resp->body);
+    if (error) {
+      return std::unexpected(
+          std::format("Error Code: {}", glz::format_error(error, resp->body)));
+    }
+
+    return {};
+  }
+
 private:
   Environment &env_;
   HttpClient cli_;
 
   static constexpr const char *BARS_ENDPOINT = "/v2/stocks/bars?";
+  static constexpr const char *LATEST_BARS_ENDPOINT = "/v2/stocks/bars/latest?";
 };
 
 }; // namespace alpaca
@@ -124,6 +168,11 @@ template <> struct meta<alpaca::MarketDataClient::Bar> {
   static constexpr auto value =
       object("c", &T::c, "h", &T::h, "l", &T::l, "n", &T::n, "o", &T::o, "t",
              &T::t, "v", &T::v, "vw", &T::vw);
+};
+
+template <> struct meta<alpaca::MarketDataClient::LatestBars> {
+  using T = alpaca::MarketDataClient::LatestBars;
+  static constexpr auto value = object("bars", &T::bars);
 };
 
 }; // namespace glz
