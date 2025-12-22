@@ -5,5 +5,5 @@
 int main() {
   auto env = alpaca::Environment();
   auto market = alpaca::MarketDataClient(env);
-  market.GetBars("AAPL");
+  market.GetBars({"AAPL"});
 }
