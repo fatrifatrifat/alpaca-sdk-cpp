@@ -46,10 +46,20 @@ int main() {
     }
   }
 
+  std::println("All Open Positions: ");
+
+  {
+    auto resp = trade.GetAllOpenPositions();
+    if (!resp) {
+      std::println("{}", resp.error());
+      return 1;
+    }
+  }
+
   std::println("Open Positions: ");
 
   {
-    auto resp = trade.GetOpenPositions();
+    auto resp = trade.GetOpenPosition("AAPL");
     if (!resp) {
       std::println("{}", resp.error());
       return 1;

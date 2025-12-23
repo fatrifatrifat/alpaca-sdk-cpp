@@ -209,7 +209,7 @@ public:
     return response;
   }
 
-  std::expected<Positions, std::string> GetOpenPositions() {
+  std::expected<Positions, std::string> GetAllOpenPositions() {
     auto resp = cli_.Get(POSITIONS_ENDPOINT, env_.GetAuthHeaders());
     if (!resp) {
       return std::unexpected(std::format("Error: {}", resp.error()));
@@ -228,6 +228,29 @@ public:
     }
 
     return positions;
+  }
+
+  std::expected<Position, std::string>
+  GetOpenPosition(const std::string &symbol) {
+    auto resp = cli_.Get(std::format("{}/{}", POSITIONS_ENDPOINT, symbol),
+                         env_.GetAuthHeaders());
+    if (!resp) {
+      return std::unexpected(std::format("Error: {}", resp.error()));
+    }
+
+    if (resp->status != 200) {
+      return std::unexpected(std::format("Error Code: {}", resp->status));
+    }
+
+    std::println("{}", resp->body);
+    Position position;
+    auto error = glz::read_json(position, resp->body);
+    if (error) {
+      return std::unexpected(
+          std::format("Error: {}", glz::format_error(error, resp->body)));
+    }
+
+    return position;
   }
 
 private:
