@@ -19,17 +19,17 @@ public:
   };
 
   struct BarParams {
-    std::string symbol;
+    std::vector<std::string> symbols;
     std::string timeframe = "1D";
     std::string start = "2024-01-03T00:00:00Z";
     std::string end = "2024-01-04T00:00:00Z";
     int limit = 1000;
-    std::string feed = "sip";
+    std::string feed = "iex";
   };
 
   struct LatestBarParam {
-    std::string symbol;
-    std::string feed = "delayed_sip";
+    std::vector<std::string> symbols;
+    std::string feed = "iex";
   };
 
   struct Bars {
@@ -42,6 +42,16 @@ public:
   };
 
 private:
+  static std::string symbols_encode(const std::vector<std::string>& v) {
+    std::string symbols;
+    for(const auto& s : v) {
+      symbols += s;
+      symbols += "%2C";
+    }
+    symbols.erase(symbols.length() - 3, 3);
+    return symbols;
+  }
+
   static std::string build_query(
       std::initializer_list<std::pair<std::string_view, std::string>> kvs) {
     std::string q;
@@ -65,7 +75,7 @@ public:
       : env_(env), cli_(env_.GetDataUrl()) {}
 
   std::expected<Bars, std::string> GetBars(const BarParams &p) {
-    if (p.symbol.empty()) {
+    if (p.symbols.empty()) {
       return std::unexpected("Error: Empty symbol");
     }
     if (p.timeframe.empty()) {
@@ -82,7 +92,7 @@ public:
     }
 
     const std::string query = build_query({
-        {"symbols", p.symbol},
+        {"symbols", symbols_encode(p.symbols)},
         {"timeframe", p.timeframe},
         {"start", p.start},
         {"end", p.end},
@@ -112,7 +122,7 @@ public:
   }
 
   std::expected<LatestBars, std::string> GetLatestBar(const LatestBarParam &p) {
-    if (p.symbol.empty()) {
+    if (p.symbols.empty()) {
       return std::unexpected("Error: Empty symbol");
     }
     if (p.feed.empty()) {
@@ -120,7 +130,7 @@ public:
     }
 
     const std::string query = build_query({
-        {"symbols", p.symbol},
+        {"symbols", symbols_encode(p.symbols)},
         {"feed", p.feed},
     });
 
