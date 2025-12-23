@@ -171,6 +171,7 @@ public:
       return std::unexpected(std::format("Error Code: {}", resp->status));
     }
 
+    std::println("{}", resp->body);
     OrderResponse response;
     auto error = glz::read_json(response, resp->body);
     if (error) {

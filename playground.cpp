@@ -35,4 +35,14 @@ int main() {
       return 1;
     }
   }
+
+  std::println("Order Request: ");
+
+  {
+    auto resp = trade.SubmitOrder({"TSLA", "15", "buy"});
+    if (!resp) {
+      std::println("{}", resp.error());
+      return 1;
+    }
+  }
 }
