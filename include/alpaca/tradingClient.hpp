@@ -154,7 +154,41 @@ struct Position {
 
 using Positions = std::vector<Position>;
 
+struct Shares {
+  long double value{};
+};
+
+struct Percent {
+  long double value{};
+};
+
+using LiquidationAmount = std::variant<Shares, Percent>;
+
+struct ClosePositionParams {
+  std::string symbol_or_asset_id;
+  LiquidationAmount amt;
+};
+
 class TradingClient {
+private:
+  static std::expected<std::string, std::string>
+  build_close_position_query(const LiquidationAmount &a) {
+    return std::visit(
+        [](auto &&x) -> std::expected<std::string, std::string> {
+          using X = std::decay_t<decltype(x)>;
+          if constexpr (std::is_same_v<X, Shares>) {
+            if (x.value <= 0)
+              return std::unexpected("qty must be > 0");
+            return "qty=" + std::format("{:.9f}", (double)x.value);
+          } else {
+            if (x.value <= 0 || x.value > 100)
+              return std::unexpected("percentage must be (0,100]");
+            return "percentage=" + std::format("{:.9f}", (double)x.value);
+          }
+        },
+        a);
+  }
+
 public:
   TradingClient(Environment &env) : env_(env), cli_(env_.GetBaseUrl()) {}
 
@@ -232,6 +266,7 @@ public:
 
   std::expected<Position, std::string>
   GetOpenPosition(const std::string &symbol) {
+    std::println("{}/{}", POSITIONS_ENDPOINT, symbol);
     auto resp = cli_.Get(std::format("{}/{}", POSITIONS_ENDPOINT, symbol),
                          env_.GetAuthHeaders());
     if (!resp) {
@@ -251,6 +286,39 @@ public:
     }
 
     return position;
+  }
+
+  std::expected<OrderResponse, std::string>
+  ClosePosition(const ClosePositionParams &cpp) {
+    if (!cpp.symbol_or_asset_id.empty()) {
+      return std::unexpected("Error: Unvalid empty symbol parameter");
+    }
+    const auto qty_query = build_close_position_query(cpp.amt);
+    if (!qty_query) {
+      return std::unexpected("Error: Unvalid liquidation amount query");
+    }
+
+    auto resp =
+        cli_.Delete(std::format("{}/{}?{}", POSITIONS_ENDPOINT,
+                                cpp.symbol_or_asset_id, qty_query.value()),
+                    env_.GetAuthHeaders());
+    if (!resp) {
+      return std::unexpected(std::format("Error: {}", resp.error()));
+    }
+
+    if (resp->status != 200) {
+      return std::unexpected(std::format("Error Code: {}", resp->status));
+    }
+
+    std::println("{}", resp->body);
+    OrderResponse response;
+    auto error = glz::read_json(response, resp->body);
+    if (error) {
+      return std::unexpected(
+          std::format("Error: {}", glz::format_error(error, resp->body)));
+    }
+
+    return response;
   }
 
 private:

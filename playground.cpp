@@ -8,6 +8,8 @@ int main() {
   auto market = alpaca::MarketDataClient(env);
   auto trade = alpaca::TradingClient(env);
 
+  std::println("Get Bars: ");
+
   {
     auto resp = market.GetBars({{"AAPL"}});
     if (!resp) {
@@ -39,7 +41,7 @@ int main() {
   std::println("Order Request: ");
 
   {
-    auto resp = trade.SubmitOrder({"TSLA", "15", "buy"});
+    auto resp = trade.SubmitOrder({"AAPL", "16", "buy"});
     if (!resp) {
       std::println("{}", resp.error());
       return 1;
@@ -65,4 +67,14 @@ int main() {
       return 1;
     }
   }
+
+  // std::println("Close Position: ");
+
+  // {
+  //   auto resp = trade.ClosePosition({"AAPL", alpaca::Percent{50.0L}});
+  //   if (!resp) {
+  //     std::println("{}", resp.error());
+  //     return 1;
+  //   }
+  // }
 }

@@ -42,7 +42,12 @@ private:
   }
 
 public:
-  explicit HttpClient(const std::string &host) : cli_(host) {}
+  explicit HttpClient(const std::string &host) : cli_(host) {
+    cli_.set_connection_timeout(5);
+    cli_.set_read_timeout(10);
+    cli_.set_write_timeout(10);
+    cli_.set_keep_alive(true);
+  }
 
   std::expected<alpaca::Status, std::string>
   Get(const std::string &path, const httplib::Headers &headers) {
@@ -64,6 +69,17 @@ public:
   Post(const std::string &path, const httplib::Headers &headers,
        const std::string &body, const std::string &content_type) {
     auto resp = cli_.Post(path, headers, body, content_type);
+    if (!resp) {
+      return std::unexpected(
+          "Error: path or headers are wrong and/or ill-formed");
+    }
+
+    return Status{resp->status, resp->body};
+  }
+
+  std::expected<alpaca::Status, std::string>
+  Delete(const std::string &path, const httplib::Headers &headers) {
+    auto resp = cli_.Delete(path, headers);
     if (!resp) {
       return std::unexpected(
           "Error: path or headers are wrong and/or ill-formed");
