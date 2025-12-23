@@ -45,4 +45,14 @@ int main() {
       return 1;
     }
   }
+
+  std::println("Open Positions: ");
+
+  {
+    auto resp = trade.GetOpenPositions();
+    if (!resp) {
+      std::println("{}", resp.error());
+      return 1;
+    }
+  }
 }

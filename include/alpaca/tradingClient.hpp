@@ -127,12 +127,39 @@ struct OrderResponse {
   std::optional<std::string> expires_at;
 };
 
+struct Position {
+  std::string asset_id;
+  std::string symbol;
+  std::string exchange;
+  std::string asset_class;
+  bool asset_marginable{};
+
+  std::string qty;
+  std::string avg_entry_price;
+  std::string side;
+  std::string market_value;
+  std::string cost_basis;
+
+  std::string unrealized_pl;
+  std::string unrealized_plpc;
+  std::string unrealized_intraday_pl;
+  std::string unrealized_intraday_plpc;
+
+  std::string current_price;
+  std::string lastday_price;
+  std::string change_today;
+
+  std::string qty_available;
+};
+
+using Positions = std::vector<Position>;
+
 class TradingClient {
 public:
   TradingClient(Environment &env) : env_(env), cli_(env_.GetBaseUrl()) {}
 
   std::expected<Account, std::string> GetAccount() {
-    auto resp = cli_.Get(ACCOUNT_ENTRYPOINT, env_.GetAuthHeaders());
+    auto resp = cli_.Get(ACCOUNT_ENDPOINT, env_.GetAuthHeaders());
     if (!resp) {
       return std::unexpected(std::format("Error: {}", resp.error()));
     }
@@ -160,7 +187,7 @@ public:
           std::format("Error: {}", glz::format_error(order_request.error())));
     }
 
-    auto resp = cli_.Post("/v2/orders", env_.GetAuthHeaders(),
+    auto resp = cli_.Post(ORDERS_ENDPOINT, env_.GetAuthHeaders(),
                           order_request.value(), "application/json");
 
     if (!resp) {
@@ -182,11 +209,34 @@ public:
     return response;
   }
 
+  std::expected<Positions, std::string> GetOpenPositions() {
+    auto resp = cli_.Get(POSITIONS_ENDPOINT, env_.GetAuthHeaders());
+    if (!resp) {
+      return std::unexpected(std::format("Error: {}", resp.error()));
+    }
+
+    if (resp->status != 200) {
+      return std::unexpected(std::format("Error Code: {}", resp->status));
+    }
+
+    std::println("{}", resp->body);
+    Positions positions;
+    auto error = glz::read_json(positions, resp->body);
+    if (error) {
+      return std::unexpected(
+          std::format("Error: {}", glz::format_error(error, resp->body)));
+    }
+
+    return positions;
+  }
+
 private:
   Environment &env_;
   HttpClient cli_;
 
-  static constexpr const char *ACCOUNT_ENTRYPOINT = "/v2/account";
+  static constexpr const char *ACCOUNT_ENDPOINT = "/v2/account";
+  static constexpr const char *ORDERS_ENDPOINT = "/v2/orders";
+  static constexpr const char *POSITIONS_ENDPOINT = "/v2/positions";
 };
 
 }; // namespace alpaca
@@ -251,6 +301,20 @@ template <> struct meta<alpaca::OrderRequest> {
              &T::type, "time_in_force", &T::time_in_force, "extended_hours",
              &T::extended_hours, "limit_price", &T::limit_price, "stop_price",
              &T::stop_price, "client_order_id", &T::client_order_id);
+};
+
+template <> struct meta<alpaca::Position> {
+  using T = alpaca::Position;
+  static constexpr auto value = object(
+      "asset_id", &T::asset_id, "symbol", &T::symbol, "exchange", &T::exchange,
+      "asset_class", &T::asset_class, "asset_marginable", &T::asset_marginable,
+      "qty", &T::qty, "avg_entry_price", &T::avg_entry_price, "side", &T::side,
+      "market_value", &T::market_value, "cost_basis", &T::cost_basis,
+      "unrealized_pl", &T::unrealized_pl, "unrealized_plpc",
+      &T::unrealized_plpc, "unrealized_intraday_pl", &T::unrealized_intraday_pl,
+      "unrealized_intraday_plpc", &T::unrealized_intraday_plpc, "current_price",
+      &T::current_price, "lastday_price", &T::lastday_price, "change_today",
+      &T::change_today, "qty_available", &T::qty_available);
 };
 
 } // namespace glz
