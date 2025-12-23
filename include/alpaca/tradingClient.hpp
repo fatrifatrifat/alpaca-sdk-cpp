@@ -64,8 +64,8 @@ struct OrderRequest {
   std::string symbol;
   std::string qty;
   std::string side;
-  std::string type;
-  std::string time_in_force;
+  std::string type{"market"};
+  std::string time_in_force{"day"};
   bool extended_hours{false};
 
   std::optional<std::string> limit_price;

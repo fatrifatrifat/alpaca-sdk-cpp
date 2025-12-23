@@ -11,25 +11,25 @@ class MarketDataClient {
 public:
   struct Bar {
     double c{}, h{}, l{};
-    long long n;
+    long long n{};
     double o{};
     std::string t;
     long long v{};
-    double vw;
+    double vw{};
   };
 
   struct BarParams {
     std::vector<std::string> symbols;
-    std::string timeframe = "1D";
-    std::string start = "2024-01-03T00:00:00Z";
-    std::string end = "2024-01-04T00:00:00Z";
-    int limit = 1000;
-    std::string feed = "iex";
+    std::string timeframe{"1D"};
+    std::string start{"2024-01-03T00:00:00Z"};
+    std::string end{"2024-01-04T00:00:00Z"};
+    int limit{1000};
+    std::string feed{"iex"};
   };
 
   struct LatestBarParam {
     std::vector<std::string> symbols;
-    std::string feed = "iex";
+    std::string feed{"iex"};
   };
 
   struct Bars {
@@ -42,9 +42,9 @@ public:
   };
 
 private:
-  static std::string symbols_encode(const std::vector<std::string>& v) {
+  static std::string symbols_encode(const std::vector<std::string> &v) {
     std::string symbols;
-    for(const auto& s : v) {
+    for (const auto &s : v) {
       symbols += s;
       symbols += "%2C";
     }
