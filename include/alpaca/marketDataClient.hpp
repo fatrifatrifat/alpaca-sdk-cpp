@@ -134,7 +134,6 @@ public:
         {"feed", p.feed},
     });
 
-    std::println("{}", query);
     auto resp = cli_.Get(LATEST_BARS_ENDPOINT + query, env_.GetAuthHeaders());
     if (!resp) {
       return std::unexpected(std::format("Error: {}", resp.error()));
@@ -152,7 +151,7 @@ public:
           std::format("Error Code: {}", glz::format_error(error, resp->body)));
     }
 
-    return {};
+    return bars;
   }
 
 private:
