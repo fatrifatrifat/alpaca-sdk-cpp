@@ -43,10 +43,6 @@ private:
 
 public:
   explicit HttpClient(const std::string &host) : cli_(host) {
-    cli_.set_connection_timeout(5);
-    cli_.set_read_timeout(10);
-    cli_.set_write_timeout(10);
-    cli_.set_keep_alive(true);
   }
 
   std::expected<alpaca::Status, std::string>
@@ -68,10 +64,15 @@ public:
   std::expected<alpaca::Status, std::string>
   Post(const std::string &path, const httplib::Headers &headers,
        const std::string &body, const std::string &content_type) {
+    if (!cli_.is_valid()) {
+      return std::unexpected(
+          "SSLClient is not valid (bad host/port or SSL init failed).");
+    }
+
     auto resp = cli_.Post(path, headers, body, content_type);
     if (!resp) {
       return std::unexpected(
-          "Error: path or headers are wrong and/or ill-formed");
+          std::format("Transport error: {}", to_string(resp.error())));
     }
 
     return Status{resp->status, resp->body};
@@ -79,10 +80,15 @@ public:
 
   std::expected<alpaca::Status, std::string>
   Delete(const std::string &path, const httplib::Headers &headers) {
+    if (!cli_.is_valid()) {
+      return std::unexpected(
+          "SSLClient is not valid (bad host/port or SSL init failed).");
+    }
+
     auto resp = cli_.Delete(path, headers);
     if (!resp) {
       return std::unexpected(
-          "Error: path or headers are wrong and/or ill-formed");
+          std::format("Transport error: {}", to_string(resp.error())));
     }
 
     return Status{resp->status, resp->body};

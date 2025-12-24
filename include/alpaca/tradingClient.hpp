@@ -1,5 +1,6 @@
 #include "environment.hpp"
 #include "httpClient.hpp"
+#include "utils.hpp"
 #include <expected>
 #include <print>
 
@@ -198,7 +199,7 @@ public:
       return std::unexpected(std::format("Error: {}", resp.error()));
     }
 
-    if (resp->status != 200) {
+    if (!utils::is_success(resp->status)) {
       return std::unexpected(std::format("Error Code: {}", resp->status));
     }
 
@@ -228,7 +229,7 @@ public:
       return std::unexpected(std::format("Error: {}", resp.error()));
     }
 
-    if (resp->status != 200) {
+    if (!utils::is_success(resp->status)) {
       return std::unexpected(std::format("Error Code: {}", resp->status));
     }
 
@@ -249,7 +250,7 @@ public:
       return std::unexpected(std::format("Error: {}", resp.error()));
     }
 
-    if (resp->status != 200) {
+    if (!utils::is_success(resp->status)) {
       return std::unexpected(std::format("Error Code: {}", resp->status));
     }
 
@@ -273,7 +274,7 @@ public:
       return std::unexpected(std::format("Error: {}", resp.error()));
     }
 
-    if (resp->status != 200) {
+    if (!utils::is_success(resp->status)) {
       return std::unexpected(std::format("Error Code: {}", resp->status));
     }
 
@@ -306,7 +307,7 @@ public:
       return std::unexpected(std::format("Error: {}", resp.error()));
     }
 
-    if (resp->status != 200) {
+    if (!utils::is_success(resp->status)) {
       return std::unexpected(std::format("Error Code: {}", resp->status));
     }
 
