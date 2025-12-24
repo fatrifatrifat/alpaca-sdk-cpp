@@ -290,7 +290,7 @@ public:
 
   std::expected<OrderResponse, std::string>
   ClosePosition(const ClosePositionParams &cpp) {
-    if (!cpp.symbol_or_asset_id.empty()) {
+    if (cpp.symbol_or_asset_id.empty()) {
       return std::unexpected("Error: Unvalid empty symbol parameter");
     }
     const auto qty_query = build_close_position_query(cpp.amt);

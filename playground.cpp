@@ -8,45 +8,45 @@ int main() {
   auto market = alpaca::MarketDataClient(env);
   auto trade = alpaca::TradingClient(env);
 
-  std::println("Get Bars: ");
+  // std::println("Get Bars: ");
 
-  {
-    auto resp = market.GetBars({{"AAPL"}});
-    if (!resp) {
-      std::println("{}", resp.error());
-      return 1;
-    }
-  }
+  // {
+  //   auto resp = market.GetBars({{"AAPL"}});
+  //   if (!resp) {
+  //     std::println("{}", resp.error());
+  //     return 1;
+  //   }
+  // }
 
-  std::println("Latest Bar: ");
+  // std::println("Latest Bar: ");
 
-  {
-    auto resp = market.GetLatestBar({{"AAPL", "TSLA"}});
-    if (!resp) {
-      std::println("{}", resp.error());
-      return 1;
-    }
-  }
+  // {
+  //   auto resp = market.GetLatestBar({{"AAPL", "TSLA"}});
+  //   if (!resp) {
+  //     std::println("{}", resp.error());
+  //     return 1;
+  //   }
+  // }
 
-  std::println("Account Info: ");
+  // std::println("Account Info: ");
 
-  {
-    auto resp = trade.GetAccount();
-    if (!resp) {
-      std::println("{}", resp.error());
-      return 1;
-    }
-  }
+  // {
+  //   auto resp = trade.GetAccount();
+  //   if (!resp) {
+  //     std::println("{}", resp.error());
+  //     return 1;
+  //   }
+  // }
 
-  std::println("Order Request: ");
+  // std::println("Order Request: ");
 
-  {
-    auto resp = trade.SubmitOrder({"AAPL", "16", "buy"});
-    if (!resp) {
-      std::println("{}", resp.error());
-      return 1;
-    }
-  }
+  // {
+  //   auto resp = trade.SubmitOrder({"AAPL", "16", "buy"});
+  //   if (!resp) {
+  //     std::println("{}", resp.error());
+  //     return 1;
+  //   }
+  // }
 
   std::println("All Open Positions: ");
 
@@ -68,13 +68,13 @@ int main() {
     }
   }
 
-  // std::println("Close Position: ");
+  std::println("Close Position: ");
 
-  // {
-  //   auto resp = trade.ClosePosition({"AAPL", alpaca::Percent{50.0L}});
-  //   if (!resp) {
-  //     std::println("{}", resp.error());
-  //     return 1;
-  //   }
-  // }
+  {
+    auto resp = trade.ClosePosition({"AAPL", alpaca::Shares{50.0L}});
+    if (!resp) {
+      std::println("{}", resp.error());
+      return 1;
+    }
+  }
 }
