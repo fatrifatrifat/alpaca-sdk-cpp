@@ -180,18 +180,18 @@ private:
           if constexpr (std::is_same_v<X, Shares>) {
             if (x.value <= 0)
               return std::unexpected("qty must be > 0");
-            return "qty=" + std::format("{:.9f}", (double)x.value);
+            return "qty=" + std::format("{:.9f}", (long double)x.value);
           } else {
             if (x.value <= 0 || x.value > 100)
               return std::unexpected("percentage must be (0,100]");
-            return "percentage=" + std::format("{:.9f}", (double)x.value);
+            return "percentage=" + std::format("{:.9f}", (long double)x.value);
           }
         },
         a);
   }
 
 public:
-  TradingClient(Environment &env) : env_(env), cli_(env_.GetBaseUrl()) {}
+  explicit TradingClient(const Environment &env) : env_(env), cli_(env_.GetBaseUrl()) {}
 
   std::expected<Account, std::string> GetAccount() {
     auto resp = cli_.Get(ACCOUNT_ENDPOINT, env_.GetAuthHeaders());
@@ -200,7 +200,7 @@ public:
     }
 
     if (!utils::is_success(resp->status)) {
-      return std::unexpected(std::format("Error Code: {}", resp->status));
+      return std::unexpected(std::format("HTTP {}: {}", resp->status, resp->body));
     }
 
     std::println("{}", resp->body);
@@ -208,7 +208,7 @@ public:
     auto error = glz::read_json(account, resp->body);
     if (error) {
       return std::unexpected(
-          std::format("Error Code: {}", glz::format_error(error, resp->body)));
+          std::format("Error: {}", glz::format_error(error, resp->body)));
     }
 
     return account;
@@ -230,7 +230,7 @@ public:
     }
 
     if (!utils::is_success(resp->status)) {
-      return std::unexpected(std::format("Error Code: {}", resp->status));
+      return std::unexpected(std::format("HTTP {}: {}", resp->status, resp->body));
     }
 
     std::println("{}", resp->body);
@@ -251,7 +251,7 @@ public:
     }
 
     if (!utils::is_success(resp->status)) {
-      return std::unexpected(std::format("Error Code: {}", resp->status));
+      return std::unexpected(std::format("HTTP {}: {}", resp->status, resp->body));
     }
 
     std::println("{}", resp->body);
@@ -275,7 +275,7 @@ public:
     }
 
     if (!utils::is_success(resp->status)) {
-      return std::unexpected(std::format("Error Code: {}", resp->status));
+      return std::unexpected(std::format("HTTP {}: {}", resp->status, resp->body));
     }
 
     std::println("{}", resp->body);
@@ -308,7 +308,7 @@ public:
     }
 
     if (!utils::is_success(resp->status)) {
-      return std::unexpected(std::format("Error Code: {}", resp->status));
+      return std::unexpected(std::format("HTTP {}: {}", resp->status, resp->body));
     }
 
     std::println("{}", resp->body);
@@ -323,7 +323,7 @@ public:
   }
 
 private:
-  Environment &env_;
+  const Environment &env_;
   HttpClient cli_;
 
   static constexpr const char *ACCOUNT_ENDPOINT = "/v2/account";

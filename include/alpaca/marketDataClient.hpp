@@ -72,7 +72,7 @@ private:
   }
 
 public:
-  explicit MarketDataClient(Environment &env)
+  explicit MarketDataClient(const Environment &env)
       : env_(env), cli_(env_.GetDataUrl()) {}
 
   std::expected<Bars, std::string> GetBars(const BarParams &p) {
@@ -156,7 +156,7 @@ public:
   }
 
 private:
-  Environment &env_;
+  const Environment &env_;
   HttpClient cli_;
 
   static constexpr const char *BARS_ENDPOINT = "/v2/stocks/bars?";
