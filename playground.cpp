@@ -1,14 +1,26 @@
+#define ENABLE_LOGGING
+
 #include <algorithm>
 #include <alpaca/environment.hpp>
 #include <alpaca/httpClient.hpp>
 #include <alpaca/marketDataClient.hpp>
 #include <alpaca/tradingClient.hpp>
 #include <chrono>
-#include <thread>
 
 using namespace std::chrono;
 
-#define WARM_UP_BARS 500
+#ifdef ENABLE_LOGGING
+#define LOG_MSG(s)                                                             \
+  do {                                                                         \
+    std::println("{}", s);                                                     \
+  } while (false)
+#else
+#define LOG_MSG(s)                                                             \
+  do {                                                                         \
+  } while (false)
+#endif
+
+#define WARM_UP_BARS 300
 #define PERIOD 5
 
 int main(int argc, char **argv) {
@@ -16,22 +28,11 @@ int main(int argc, char **argv) {
   auto market = alpaca::MarketDataClient(env);
   auto trade = alpaca::TradingClient(env);
 
-  auto now = time_point_cast<seconds>(system_clock::now());
-  auto end_s = now;
+  auto end_s = time_point_cast<seconds>(system_clock::now());
+  auto start_s = end_s - days{10};
 
-  auto lookback = minutes{PERIOD * WARM_UP_BARS};
-
-  auto start_s = end_s - duration_cast<seconds>(lookback);
-
-  auto to_isoz = [](sys_time<seconds> t) {
-    return std::format("{:%FT%T}Z", t);
-  };
-
-  const std::string start = to_isoz(start_s);
-  const std::string end = to_isoz(end_s);
-
-  std::println("Start: {}", start);
-  std::println("End: {}", end);
+  const std::string start = alpaca::utils::to_isoz(start_s);
+  const std::string end = alpaca::utils::to_isoz(end_s);
 
   std::vector<std::string> sp500;
   sp500.reserve(argc - 1);
@@ -41,7 +42,8 @@ int main(int argc, char **argv) {
 
   double initial_cash = std::stod(trade.GetAccount()->cash);
 
-  auto resp = market.GetBars({sp500, "5Min", start, end, 10'000});
+  auto resp = market.GetBars({sp500, "5Min", start, end, 300});
+
   if (!resp) {
     std::println("{}", resp.error());
     return 1;
@@ -59,6 +61,10 @@ int main(int argc, char **argv) {
     std::sort(vec.begin(), vec.end(), [](const auto &a, const auto &b) {
       return a.timestamp < b.timestamp;
     });
+
+    if (vec.size() > WARM_UP_BARS) {
+      vec.erase(vec.begin(), vec.end() - WARM_UP_BARS);
+    }
 
     std::vector<double> closes;
     closes.reserve(vec.size());

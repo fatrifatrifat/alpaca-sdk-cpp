@@ -26,6 +26,7 @@ public:
     std::string end{"2024-01-04T00:00:00Z"};
     int limit{1000};
     std::string feed{"iex"};
+    std::optional<std::string> page_token;
   };
 
   struct LatestBarParam {
@@ -71,11 +72,7 @@ private:
     return q;
   }
 
-public:
-  explicit MarketDataClient(const Environment &env)
-      : env_(env), cli_(env_.GetDataUrl()) {}
-
-  std::expected<Bars, std::string> GetBars(const BarParams &p) {
+  std::expected<Bars, std::string> GetBarsPimpl(const BarParams &p) {
     if (p.symbols.empty()) {
       return std::unexpected("Error: Empty symbol");
     }
@@ -99,6 +96,7 @@ public:
         {"end", p.end},
         {"limit", std::to_string(p.limit)},
         {"feed", p.feed},
+        {"page_token", p.page_token.value_or("")},
     });
 
     auto resp = cli_.Get(BARS_ENDPOINT + query, env_.GetAuthHeaders());
@@ -118,6 +116,43 @@ public:
     }
 
     return bars;
+  }
+
+public:
+  explicit MarketDataClient(const Environment &env)
+      : env_(env), cli_(env_.GetDataUrl()) {}
+
+  std::expected<Bars, std::string> GetBars(const BarParams &p) {
+    std::map<std::string, std::vector<Bar>> barsBySymbol;
+    std::optional<std::string> page;
+
+    std::unordered_set<std::string> seen;
+    auto params = p;
+
+    while (true) {
+      params.page_token = page;
+      auto resp = GetBarsPimpl(params);
+      if (!resp) {
+        return std::unexpected(resp.error());
+      }
+
+      for (auto &[sym, bars] : resp->bars) {
+        auto &dst = barsBySymbol[sym];
+        dst.insert(dst.end(), bars.begin(), bars.end());
+      }
+
+      if (!resp->next_page_token || resp->next_page_token->empty()) {
+        break;
+      }
+
+      if (!seen.insert(*resp->next_page_token).second) {
+        return std::unexpected("Pagination error: next_page_token repeated");
+      }
+
+      page = resp->next_page_token;
+    }
+
+    return Bars{barsBySymbol};
   }
 
   std::expected<LatestBars, std::string> GetLatestBar(const LatestBarParam &p) {

@@ -1,17 +1,18 @@
 #pragma once
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstddef>
 #include <optional>
-#include <cmath>
 #include <vector>
-
 
 namespace alpaca::utils {
 
-inline bool is_success(int s) {
-  return 200 <= s &&s < 300;
-}
+inline bool is_success(int s) { return 200 <= s && s < 300; }
+
+inline auto to_isoz(std::chrono::sys_time<std::chrono::seconds> t) {
+  return std::format("{:%FT%T}Z", t);
+};
 
 struct BacktestResult {
   double initial_cash{};
@@ -93,8 +94,10 @@ public:
     out.hist = out.macd - out.signal;
 
     if (prev_signal_ && prev_macd_) {
-      out.crossedAbove = (*prev_macd_ <= *prev_signal_) && (out.macd > out.signal);
-      out.crossedBelow = (*prev_macd_ >= *prev_signal_) && (out.macd < out.signal);
+      out.crossedAbove =
+          (*prev_macd_ <= *prev_signal_) && (out.macd > out.signal);
+      out.crossedBelow =
+          (*prev_macd_ >= *prev_signal_) && (out.macd < out.signal);
     }
 
     prev_macd_ = out.macd;
@@ -111,7 +114,7 @@ private:
   std::optional<double> prev_signal_;
 };
 
-inline BacktestResult BacktestBuyHoldAllIn(const std::vector<double>& closes,
+inline BacktestResult BacktestBuyHoldAllIn(const std::vector<double> &closes,
                                            double initial_cash = 10'000.0) {
   BacktestResult r{};
   r.initial_cash = initial_cash;
@@ -121,37 +124,38 @@ inline BacktestResult BacktestBuyHoldAllIn(const std::vector<double>& closes,
 
   auto good = [](double x) { return std::isfinite(x) && x > 0.0; };
 
-  if (!std::isfinite(initial_cash) || initial_cash <= 0.0) return r;
+  if (!std::isfinite(initial_cash) || initial_cash <= 0.0)
+    return r;
 
   auto it_first = std::find_if(closes.begin(), closes.end(), good);
-  auto it_last  = std::find_if(closes.rbegin(), closes.rend(), good);
+  auto it_last = std::find_if(closes.rbegin(), closes.rend(), good);
 
-  if (it_first == closes.end() || it_last == closes.rend()) return r;
+  if (it_first == closes.end() || it_last == closes.rend())
+    return r;
 
   const std::ptrdiff_t i_first = std::distance(closes.begin(), it_first);
-  const std::ptrdiff_t i_last  = (std::ptrdiff_t)closes.size() - 1
-                               - std::distance(closes.rbegin(), it_last);
+  const std::ptrdiff_t i_last = (std::ptrdiff_t)closes.size() - 1 -
+                                std::distance(closes.rbegin(), it_last);
 
-  if (i_last <= i_first) return r;
+  if (i_last <= i_first)
+    return r;
 
   const double first = *it_first;
-  const double last  = *it_last;
+  const double last = *it_last;
 
-  const long double shares =
-      (long double)initial_cash / (long double)first;
+  const long double shares = (long double)initial_cash / (long double)first;
 
-  const long double final_equity =
-      shares * (long double)last;
+  const long double final_equity = shares * (long double)last;
 
   r.final_equity = (double)final_equity;
   r.total_return = (r.final_equity / r.initial_cash) - 1.0;
   r.trades = 1;
-  r.buys   = 1;
-  r.sells  = 0;
+  r.buys = 1;
+  r.sells = 0;
   return r;
 }
 
-inline BacktestResult BacktestMACDAllIn(const std::vector<double>& closes,
+inline BacktestResult BacktestMACDAllIn(const std::vector<double> &closes,
                                         double initial_cash = 10'000.0) {
   BacktestResult r;
   r.initial_cash = initial_cash;
@@ -171,21 +175,24 @@ inline BacktestResult BacktestMACDAllIn(const std::vector<double>& closes,
     const double close = closes[i];
     auto m = macd.Update(close);
 
-    if (!m.ready) continue;
+    if (!m.ready)
+      continue;
 
     if (m.crossedAbove && shares == 0) {
       long long buy_shares = static_cast<long long>(std::floor(cash / close));
       if (buy_shares > 0) {
         shares += buy_shares;
         cash -= buy_shares * close;
-        r.trades++; r.buys++;
+        r.trades++;
+        r.buys++;
       }
     }
 
     if (m.crossedBelow && shares > 0) {
       cash += shares * close;
       shares = 0;
-      r.trades++; r.sells++;
+      r.trades++;
+      r.sells++;
     }
   }
 
@@ -195,4 +202,4 @@ inline BacktestResult BacktestMACDAllIn(const std::vector<double>& closes,
   return r;
 }
 
-};
+}; // namespace alpaca::utils
