@@ -1,4 +1,4 @@
-#define ENABLE_LOGGING
+// #define ENABLE_LOGGING
 
 #include <algorithm>
 #include <alpaca/environment.hpp>
@@ -20,8 +20,7 @@ using namespace std::chrono;
   } while (false)
 #endif
 
-#define WARM_UP_BARS 300
-#define PERIOD 5
+#define WARM_UP_BARS 600
 
 int main(int argc, char **argv) {
   auto env = alpaca::Environment();
@@ -29,20 +28,20 @@ int main(int argc, char **argv) {
   auto trade = alpaca::TradingClient(env);
 
   auto end_s = time_point_cast<seconds>(system_clock::now());
-  auto start_s = end_s - days{10};
+  auto start_s = end_s - days{std::stoi(argv[argc - 1])};
 
   const std::string start = alpaca::utils::to_isoz(start_s);
   const std::string end = alpaca::utils::to_isoz(end_s);
 
   std::vector<std::string> sp500;
-  sp500.reserve(argc - 1);
-  for (auto i{1uz}; i < argc; i++) {
+  sp500.reserve(argc - 2);
+  for (auto i{1uz}; i < argc - 1; i++) {
     sp500.push_back(argv[i]);
   }
 
   double initial_cash = std::stod(trade.GetAccount()->cash);
 
-  auto resp = market.GetBars({sp500, "5Min", start, end, 300});
+  auto resp = market.GetBars({sp500, "15Min", start, end, WARM_UP_BARS});
 
   if (!resp) {
     std::println("{}", resp.error());
@@ -50,10 +49,10 @@ int main(int argc, char **argv) {
   }
 
   for (const auto &s : sp500) {
-    std::println("Stock: {}", s);
+    LOG_MSG(std::format("Stock: {}", s));
     auto it = resp->bars.find(s);
     if (it == resp->bars.end() || it->second.empty()) {
-      std::println("No bars returned for {} in that window", s);
+      LOG_MSG(std::format("No bars returned for {} in that window", s));
       continue;
     }
 
@@ -71,76 +70,19 @@ int main(int argc, char **argv) {
     for (auto &b : vec) {
       closes.push_back(b.close);
     }
+    LOG_MSG(std::format("Vec size: {}", vec.size()));
 
     auto macdRes = alpaca::utils::BacktestMACDAllIn(closes, initial_cash);
     auto bhRes = alpaca::utils::BacktestBuyHoldAllIn(closes, initial_cash);
 
-    std::println("MACD final equity: {:.2f}  return: {:.2f}%  trades: {} (buys "
-                 "{}, sells {})",
-                 macdRes.final_equity, macdRes.total_return * 100.0,
-                 macdRes.trades, macdRes.buys, macdRes.sells);
+    LOG_MSG(std::format(
+        "MACD final equity: {:.2f}  return: {:.2f}%  trades: {} (buys "
+        "{}, sells {})",
+        macdRes.final_equity, macdRes.total_return * 100.0, macdRes.trades,
+        macdRes.buys, macdRes.sells));
 
-    std::println("B&H  final equity: {:.2f}  return: {:.2f}%  trades: {}\n",
-                 bhRes.final_equity, bhRes.total_return * 100.0, bhRes.trades);
+    LOG_MSG(std::format(
+        "B&H  final equity: {:.2f}  return: {:.2f}%  trades: {}\n",
+        bhRes.final_equity, bhRes.total_return * 100.0, bhRes.trades));
   }
-
-  // std::println("Latest Bar: ");
-
-  // {
-  //   auto resp = market.GetLatestBar({{"AAPL", "TSLA"}});
-  //   if (!resp) {
-  //     std::println("{}", resp.error());
-  //     return 1;
-  //   }
-  // }
-
-  // std::println("Account Info: ");
-
-  // {
-  //   auto resp = trade.GetAccount();
-  //   if (!resp) {
-  //     std::println("{}", resp.error());
-  //     return 1;
-  //   }
-  // }
-
-  // std::println("Order Request: ");
-
-  // {
-  //   auto resp = trade.SubmitOrder({"AAPL", "16", "buy"});
-  //   if (!resp) {
-  //     std::println("{}", resp.error());
-  //     return 1;
-  //   }
-  // }
-
-  // std::println("All Open Positions: ");
-
-  // {
-  //   auto resp = trade.GetAllOpenPositions();
-  //   if (!resp) {
-  //     std::println("{}", resp.error());
-  //     return 1;
-  //   }
-  // }
-
-  // std::println("Open Positions: ");
-
-  // {
-  //   auto resp = trade.GetOpenPosition("AAPL");
-  //   if (!resp) {
-  //     std::println("{}", resp.error());
-  //     return 1;
-  //   }
-  // }
-
-  // std::println("Close Position: ");
-
-  // {
-  //   auto resp = trade.ClosePosition({"AAPL", alpaca::Shares{1.0L}});
-  //   if (!resp) {
-  //     std::println("{}", resp.error());
-  //     return 1;
-  //   }
-  // }
 }
