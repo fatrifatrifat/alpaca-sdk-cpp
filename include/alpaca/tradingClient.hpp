@@ -191,7 +191,8 @@ private:
   }
 
 public:
-  explicit TradingClient(const Environment &env) : env_(env), cli_(env_.GetBaseUrl()) {}
+  explicit TradingClient(const Environment &env)
+      : env_(env), cli_(env_.GetBaseUrl()) {}
 
   std::expected<Account, std::string> GetAccount() {
     auto resp = cli_.Get(ACCOUNT_ENDPOINT, env_.GetAuthHeaders());
@@ -200,10 +201,10 @@ public:
     }
 
     if (!utils::is_success(resp->status)) {
-      return std::unexpected(std::format("HTTP {}: {}", resp->status, resp->body));
+      return std::unexpected(
+          std::format("HTTP {}: {}", resp->status, resp->body));
     }
 
-    std::println("{}", resp->body);
     Account account;
     auto error = glz::read_json(account, resp->body);
     if (error) {
@@ -230,10 +231,10 @@ public:
     }
 
     if (!utils::is_success(resp->status)) {
-      return std::unexpected(std::format("HTTP {}: {}", resp->status, resp->body));
+      return std::unexpected(
+          std::format("HTTP {}: {}", resp->status, resp->body));
     }
 
-    std::println("{}", resp->body);
     OrderResponse response;
     auto error = glz::read_json(response, resp->body);
     if (error) {
@@ -251,10 +252,10 @@ public:
     }
 
     if (!utils::is_success(resp->status)) {
-      return std::unexpected(std::format("HTTP {}: {}", resp->status, resp->body));
+      return std::unexpected(
+          std::format("HTTP {}: {}", resp->status, resp->body));
     }
 
-    std::println("{}", resp->body);
     Positions positions;
     auto error = glz::read_json(positions, resp->body);
     if (error) {
@@ -267,7 +268,6 @@ public:
 
   std::expected<Position, std::string>
   GetOpenPosition(const std::string &symbol) {
-    std::println("{}/{}", POSITIONS_ENDPOINT, symbol);
     auto resp = cli_.Get(std::format("{}/{}", POSITIONS_ENDPOINT, symbol),
                          env_.GetAuthHeaders());
     if (!resp) {
@@ -275,10 +275,10 @@ public:
     }
 
     if (!utils::is_success(resp->status)) {
-      return std::unexpected(std::format("HTTP {}: {}", resp->status, resp->body));
+      return std::unexpected(
+          std::format("HTTP {}: {}", resp->status, resp->body));
     }
 
-    std::println("{}", resp->body);
     Position position;
     auto error = glz::read_json(position, resp->body);
     if (error) {
@@ -308,10 +308,10 @@ public:
     }
 
     if (!utils::is_success(resp->status)) {
-      return std::unexpected(std::format("HTTP {}: {}", resp->status, resp->body));
+      return std::unexpected(
+          std::format("HTTP {}: {}", resp->status, resp->body));
     }
 
-    std::println("{}", resp->body);
     OrderResponse response;
     auto error = glz::read_json(response, resp->body);
     if (error) {

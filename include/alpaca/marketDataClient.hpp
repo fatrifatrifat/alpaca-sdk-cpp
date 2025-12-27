@@ -11,12 +11,12 @@ namespace alpaca {
 class MarketDataClient {
 public:
   struct Bar {
-    double c{}, h{}, l{};
-    long long n{};
-    double o{};
-    std::string t;
-    long long v{};
-    double vw{};
+    double close{}, high{}, low{};
+    long long number_of_trades{};
+    double open{};
+    std::string timestamp;
+    long long volume{};
+    double volume_weigted_price{};
   };
 
   struct BarParams {
@@ -101,7 +101,6 @@ public:
         {"feed", p.feed},
     });
 
-    std::println("{}", query);
     auto resp = cli_.Get(BARS_ENDPOINT + query, env_.GetAuthHeaders());
     if (!resp) {
       return std::unexpected(std::format("Error: {}", resp.error()));
@@ -111,7 +110,6 @@ public:
       return std::unexpected(std::format("Error Code: {}", resp->status));
     }
 
-    std::println("{}", resp->body);
     Bars bars;
     auto error = glz::read_json(bars, resp->body);
     if (error) {
@@ -144,7 +142,6 @@ public:
       return std::unexpected(std::format("Error Code: {}", resp->status));
     }
 
-    std::println("{}", resp->body);
     LatestBars bars;
     auto error = glz::read_json(bars, resp->body);
     if (error) {
@@ -176,8 +173,9 @@ template <> struct meta<alpaca::MarketDataClient::Bars> {
 template <> struct meta<alpaca::MarketDataClient::Bar> {
   using T = alpaca::MarketDataClient::Bar;
   static constexpr auto value =
-      object("c", &T::c, "h", &T::h, "l", &T::l, "n", &T::n, "o", &T::o, "t",
-             &T::t, "v", &T::v, "vw", &T::vw);
+      object("c", &T::close, "h", &T::high, "l", &T::low, "n",
+             &T::number_of_trades, "o", &T::open, "t", &T::timestamp, "v",
+             &T::volume, "vw", &T::volume_weigted_price);
 };
 
 template <> struct meta<alpaca::MarketDataClient::LatestBars> {
