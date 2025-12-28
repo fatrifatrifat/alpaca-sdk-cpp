@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstddef>
 #include <optional>
+#include <thread>
 #include <vector>
 
 namespace alpaca::utils {
@@ -12,6 +13,16 @@ inline bool is_success(int s) { return 200 <= s && s < 300; }
 
 inline auto to_isoz(std::chrono::sys_time<std::chrono::seconds> t) {
   return std::format("{:%FT%T}Z", t);
+};
+
+inline auto sleep_to_next_boundary(int minutes) {
+  using namespace std::chrono;
+  auto now = system_clock::now();
+  auto now_min = time_point_cast<std::chrono::minutes>(now);
+  auto mins = now_min.time_since_epoch().count();
+  auto next =
+      now_min + std::chrono::minutes{(minutes - (mins % minutes)) % minutes};
+  std::this_thread::sleep_until(next + seconds{2});
 };
 
 struct BacktestResult {
