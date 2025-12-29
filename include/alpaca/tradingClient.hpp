@@ -1,8 +1,7 @@
 #include "environment.hpp"
 #include "httpClient.hpp"
-#include "utils.hpp"
+#include "utils/utils.hpp"
 #include <expected>
-#include <print>
 
 namespace alpaca {
 
@@ -173,7 +172,7 @@ struct ClosePositionParams {
 class TradingClient {
 private:
   static std::expected<std::string, std::string>
-  build_close_position_query(const LiquidationAmount &a) {
+  BuildClosePositionQuery(const LiquidationAmount &a) {
     return std::visit(
         [](auto &&x) -> std::expected<std::string, std::string> {
           using X = std::decay_t<decltype(x)>;
@@ -200,7 +199,7 @@ public:
       return std::unexpected(std::format("Error: {}", resp.error()));
     }
 
-    if (!utils::is_success(resp->status)) {
+    if (!utils::IsSuccess(resp->status)) {
       return std::unexpected(
           std::format("HTTP {}: {}", resp->status, resp->body));
     }
@@ -230,7 +229,7 @@ public:
       return std::unexpected(std::format("Error: {}", resp.error()));
     }
 
-    if (!utils::is_success(resp->status)) {
+    if (!utils::IsSuccess(resp->status)) {
       return std::unexpected(
           std::format("HTTP {}: {}", resp->status, resp->body));
     }
@@ -251,7 +250,7 @@ public:
       return std::unexpected(std::format("Error: {}", resp.error()));
     }
 
-    if (!utils::is_success(resp->status)) {
+    if (!utils::IsSuccess(resp->status)) {
       return std::unexpected(
           std::format("HTTP {}: {}", resp->status, resp->body));
     }
@@ -274,7 +273,7 @@ public:
       return std::unexpected(std::format("Error: {}", resp.error()));
     }
 
-    if (!utils::is_success(resp->status)) {
+    if (!utils::IsSuccess(resp->status)) {
       return std::unexpected(
           std::format("HTTP {}: {}", resp->status, resp->body));
     }
@@ -294,7 +293,7 @@ public:
     if (cpp.symbol_or_asset_id.empty()) {
       return std::unexpected("Error: Unvalid empty symbol parameter");
     }
-    const auto qty_query = build_close_position_query(cpp.amt);
+    const auto qty_query = BuildClosePositionQuery(cpp.amt);
     if (!qty_query) {
       return std::unexpected("Error: Unvalid liquidation amount query");
     }
@@ -307,7 +306,7 @@ public:
       return std::unexpected(std::format("Error: {}", resp.error()));
     }
 
-    if (!utils::is_success(resp->status)) {
+    if (!utils::IsSuccess(resp->status)) {
       return std::unexpected(
           std::format("HTTP {}: {}", resp->status, resp->body));
     }
