@@ -9,13 +9,13 @@
 
 namespace alpaca::utils {
 
-inline bool is_success(int s) { return 200 <= s && s < 300; }
+inline bool IsSuccess(int s) { return 200 <= s && s < 300; }
 
-inline auto to_isoz(std::chrono::sys_time<std::chrono::seconds> t) {
+inline auto ToIsoz(std::chrono::sys_time<std::chrono::seconds> t) {
   return std::format("{:%FT%T}Z", t);
 };
 
-inline auto sleep_to_next_boundary(int minutes) {
+inline auto SleepToNextBoundary(int minutes) {
   using namespace std::chrono;
   auto now = system_clock::now();
   auto now_min = time_point_cast<std::chrono::minutes>(now);

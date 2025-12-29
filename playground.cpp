@@ -5,6 +5,7 @@
 #include <alpaca/httpClient.hpp>
 #include <alpaca/marketDataClient.hpp>
 #include <alpaca/tradingClient.hpp>
+#include <print>
 #include <chrono>
 #include <thread>
 
@@ -25,8 +26,7 @@ struct SymState {
 
 int main(int argc, char **argv) {
   if (argc < 2) {
-    LOG_MSG("Wrong arguments. Intended arguments <symbol> <day lookup "
-            "buffer count>")
+    LOG_MSG("Wrong arguments. Intended arguments <symbols>");
     return 1;
   }
 
@@ -51,15 +51,15 @@ int main(int argc, char **argv) {
   auto warm_end_s = time_point_cast<seconds>(system_clock::now());
   auto warm_start_s = warm_end_s - days{45};
 
-  const std::string warm_start = au::to_isoz(warm_start_s);
-  const std::string warm_end = au::to_isoz(warm_end_s);
+  const std::string warm_start = au::ToIsoz(warm_start_s);
+  const std::string warm_end = au::ToIsoz(warm_end_s);
   LOG_MSG(std::format("Start: {}, End: {}", warm_start, warm_end));
 
   auto warm_resp =
       market.GetBars({symbols, timeframe, warm_start, warm_end, WARMUP_BARS});
   if (!warm_resp) {
     LOG_MSG(
-        std::format("Couldn't get warmup bars. Error: {}", warm_resp.error()));
+        std::format("Couldn't get warmup bars. {}", warm_resp.error()));
     return 1;
   }
 
@@ -107,11 +107,12 @@ int main(int argc, char **argv) {
 
     auto end_tp = time_point_cast<seconds>(system_clock::now()) - API_LAG;
     auto start_tp = end_tp - duration_cast<seconds>(barDur * LIVE_FETCH_BARS);
+    LOG_MSG(std::format("Start: {}, End: {}", au::ToIsoz(start_tp), au::ToIsoz(end_tp)));
 
     int limit = static_cast<int>(symbols.size()) * LIVE_FETCH_BARS * 2;
 
-    auto resp = market.GetBars({symbols, timeframe, au::to_isoz(start_tp),
-                                au::to_isoz(end_tp), limit});
+    auto resp = market.GetBars({symbols, timeframe, au::ToIsoz(start_tp),
+                                au::ToIsoz(end_tp), limit});
     if (!resp) {
       LOG_MSG(std::format("Live GetBars failed: {}", resp.error()));
       continue;

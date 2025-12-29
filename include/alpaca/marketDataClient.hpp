@@ -3,7 +3,6 @@
 #include "httpClient.hpp"
 #include "utils.hpp"
 #include <glaze/glaze.hpp>
-#include <print>
 #include <string>
 
 namespace alpaca {
@@ -104,7 +103,7 @@ private:
       return std::unexpected(std::format("Error: {}", resp.error()));
     }
 
-    if (!utils::is_success(resp->status)) {
+    if (!utils::IsSuccess(resp->status)) {
       return std::unexpected(std::format("Error Code: {}", resp->status));
     }
 
@@ -173,7 +172,7 @@ public:
       return std::unexpected(std::format("Error: {}", resp.error()));
     }
 
-    if (!utils::is_success(resp->status)) {
+    if (!utils::IsSuccess(resp->status)) {
       return std::unexpected(std::format("Error Code: {}", resp->status));
     }
 
