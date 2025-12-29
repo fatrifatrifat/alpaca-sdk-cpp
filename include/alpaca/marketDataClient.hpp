@@ -1,7 +1,6 @@
 #pragma once
-#include <alpaca/client/environment.hpp>
-#include <alpaca/client/httpClient.hpp>
-#include <alpaca/models/bars.hpp>
+#include <alpaca/environment.hpp>
+#include <alpaca/httpClient.hpp>
 #include <alpaca/utils/utils.hpp>
 #include <glaze/glaze.hpp>
 #include <string>
@@ -162,3 +161,26 @@ private:
 };
 
 }; // namespace alpaca
+
+namespace glz {
+
+template <> struct meta<alpaca::MarketDataClient::Bars> {
+  using T = alpaca::MarketDataClient::Bars;
+  static constexpr auto value =
+      object("bars", &T::bars, "next_page_token", &T::next_page_token);
+};
+
+template <> struct meta<alpaca::MarketDataClient::Bar> {
+  using T = alpaca::MarketDataClient::Bar;
+  static constexpr auto value =
+      object("c", &T::close, "h", &T::high, "l", &T::low, "n",
+             &T::number_of_trades, "o", &T::open, "t", &T::timestamp, "v",
+             &T::volume, "vw", &T::volume_weigted_price);
+};
+
+template <> struct meta<alpaca::MarketDataClient::LatestBars> {
+  using T = alpaca::MarketDataClient::LatestBars;
+  static constexpr auto value = object("bars", &T::bars);
+};
+
+}; // namespace glz
