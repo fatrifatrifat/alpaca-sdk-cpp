@@ -1,7 +1,7 @@
 #pragma once
-#include "environment.hpp"
-#include "httpClient.hpp"
-#include "utils/utils.hpp"
+#include <alpaca/client/environment.hpp>
+#include <alpaca/client/httpClient.hpp>
+#include <alpaca/utils/utils.hpp>
 #include <glaze/glaze.hpp>
 #include <string>
 
@@ -43,7 +43,7 @@ public:
   };
 
 private:
-  static std::string symbols_encode(const std::vector<std::string> &v) {
+  static std::string SymbolsEncode(const std::vector<std::string> &v) {
     std::string symbols;
     for (const auto &s : v) {
       symbols += s;
@@ -53,7 +53,7 @@ private:
     return symbols;
   }
 
-  static std::string build_query(
+  static std::string BuildQuery(
       std::initializer_list<std::pair<std::string_view, std::string>> kvs) {
     std::string q;
     bool first = true;
@@ -88,8 +88,8 @@ private:
       return std::unexpected("Error: Empty feed");
     }
 
-    const std::string query = build_query({
-        {"symbols", symbols_encode(p.symbols)},
+    const std::string query = BuildQuery({
+        {"symbols", SymbolsEncode(p.symbols)},
         {"timeframe", p.timeframe},
         {"start", p.start},
         {"end", p.end},
@@ -162,8 +162,8 @@ public:
       return std::unexpected("Error: Empty feed");
     }
 
-    const std::string query = build_query({
-        {"symbols", symbols_encode(p.symbols)},
+    const std::string query = BuildQuery({
+        {"symbols", SymbolsEncode(p.symbols)},
         {"feed", p.feed},
     });
 

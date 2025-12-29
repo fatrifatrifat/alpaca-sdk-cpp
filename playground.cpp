@@ -1,12 +1,5 @@
-
-#include <algorithm>
-#include <alpaca/environment.hpp>
-#include <alpaca/httpClient.hpp>
-#include <alpaca/marketDataClient.hpp>
-#include <alpaca/tradingClient.hpp>
+#include <alpaca/alpaca.hpp>
 #include <alpaca/utils/macd.hpp>
-#include <alpaca/utils/utils.hpp>
-#include <chrono>
 #include <print>
 #include <thread>
 

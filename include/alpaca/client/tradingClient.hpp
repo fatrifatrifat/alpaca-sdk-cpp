@@ -1,6 +1,7 @@
-#include "environment.hpp"
-#include "httpClient.hpp"
-#include "utils/utils.hpp"
+#pragma once
+#include <alpaca/client/environment.hpp>
+#include <alpaca/client/httpClient.hpp>
+#include <alpaca/utils/utils.hpp>
 #include <expected>
 
 namespace alpaca {
