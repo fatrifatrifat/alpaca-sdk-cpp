@@ -1,6 +1,6 @@
 #include "environment.hpp"
 #include "httpClient.hpp"
-#include "utils.hpp"
+#include "utils/utils.hpp"
 #include <expected>
 
 namespace alpaca {
