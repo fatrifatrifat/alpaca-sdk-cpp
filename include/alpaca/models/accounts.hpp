@@ -3,6 +3,23 @@
 
 namespace alpaca {
 
+enum class AccountStatus {
+  ONBOARDING,
+  SUBMISSION_FAILED,
+  SUBMITTED,
+  ACCOUNT_UPDATED,
+  APPROVAL_PENDING,
+  ACTIVE,
+  REJECTED,
+};
+
+enum OptionLevel {
+  Disabled,
+  CoveredCall,
+  LogCall,
+  Spreads,
+};
+
 struct Account {
   std::string id;
 
@@ -10,11 +27,11 @@ struct Account {
   std::optional<glz::generic> user_configurations;
 
   std::string account_number;
-  std::string status;
+  AccountStatus status;
   std::string crypto_status;
 
-  int options_approved_level{};
-  int options_trading_level{};
+  OptionLevel options_approved_level{};
+  OptionLevel options_trading_level{};
 
   std::string currency;
 
@@ -61,6 +78,13 @@ struct Account {
 }; // namespace alpaca
 
 namespace glz {
+
+template <> struct meta<alpaca::AccountStatus> {
+  using enum alpaca::AccountStatus;
+  static constexpr auto value =
+      glz::enumerate(ONBOARDING, SUBMISSION_FAILED, SUBMITTED, ACCOUNT_UPDATED,
+                     APPROVAL_PENDING, ACTIVE, REJECTED);
+};
 
 template <> struct meta<alpaca::Account> {
   using T = alpaca::Account;

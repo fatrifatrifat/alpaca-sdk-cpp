@@ -53,6 +53,7 @@ public:
           std::format("Error: {}", glz::format_error(error, resp->body)));
     }
 
+    std::println("Account details: {}", resp->body);
     return account;
   }
 
