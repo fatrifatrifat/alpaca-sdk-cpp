@@ -17,12 +17,14 @@ private:
         [](auto &&x) -> std::expected<std::string, std::string> {
           using X = std::decay_t<decltype(x)>;
           if constexpr (std::is_same_v<X, Shares>) {
-            if (x.value <= 0)
+            if (x.value <= 0) {
               return std::unexpected("qty must be > 0");
+            }
             return "qty=" + std::format("{:.9f}", (long double)x.value);
           } else {
-            if (x.value <= 0 || x.value > 100)
+            if (x.value <= 0 || x.value > 100) {
               return std::unexpected("percentage must be (0,100]");
+            }
             return "percentage=" + std::format("{:.9f}", (long double)x.value);
           }
         },

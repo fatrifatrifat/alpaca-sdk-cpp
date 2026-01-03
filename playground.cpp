@@ -1,7 +1,6 @@
 #include <alpaca/alpaca.hpp>
 #include <alpaca/utils/macd.hpp>
 #include <print>
-#include <thread>
 
 using namespace std::chrono;
 namespace au = alpaca::utils;
@@ -108,10 +107,25 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  auto pos_resp = trade.GetAllOpenPositions();
+  if (!pos_resp) {
+    LOG_MSG(LOG_LEVEL_ERROR, "Couldn't get all open positions");
+    return 1;
+  }
+
+  for (const auto &pos : pos_resp.value()) {
+    auto it = st.find(pos.symbol);
+    if (it != st.end()) {
+      it->second.in_position = true;
+    }
+  }
+
   auto get_cash = [&trade] -> double {
     auto acc = trade.GetAccount();
-    return std::stod(acc->cash);
+    return std::stod(acc->buying_power);
   };
+
+  double buy_power = std::floor(get_cash() / symbols.size());
 
   while (true) {
     std::this_thread::sleep_for(seconds{15});
@@ -162,7 +176,6 @@ int main(int argc, char **argv) {
         }
 
         if (m.crossedAbove && !state.in_position) {
-          double buy_power = std::floor(get_cash() / symbols.size());
           long long qty =
               static_cast<long long>(std::floor(buy_power / bar.close));
           if (qty > 0) {

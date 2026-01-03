@@ -71,7 +71,8 @@ private:
     }
 
     if (!utils::IsSuccess(resp->status)) {
-      return std::unexpected(std::format("Error Code: {}", resp->status));
+      return std::unexpected(
+          std::format("HTTP {}: {}", resp->status, resp->body));
     }
 
     Bars bars;
@@ -140,7 +141,8 @@ public:
     }
 
     if (!utils::IsSuccess(resp->status)) {
-      return std::unexpected(std::format("Error Code: {}", resp->status));
+      return std::unexpected(
+          std::format("HTTP {}: {}", resp->status, resp->body));
     }
 
     LatestBars bars;
