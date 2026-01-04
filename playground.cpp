@@ -14,13 +14,26 @@ int main(int argc, char **argv) {
   auto market = alpaca::MarketDataClient(env);
   auto trade = alpaca::TradingClient(env);
 
-  auto acc_resp = trade.GetAccount();
-  if (!acc_resp) {
-    LOG_MSG(LOG_LEVEL_ERROR, "{}", acc_resp.error());
+  auto bars = market.GetBars({{"AAPL"},
+                              "1H",
+                              "2024-01-03T00:00:00Z",
+                              "2024-01-04T00:00:00Z",
+                              std::nullopt,
+                              alpaca::BarFeed::IEX,
+                              std::nullopt,
+                              std::nullopt,
+                              std::nullopt,
+                              "USD",
+                              std::nullopt});
+  if (!bars) {
+    LOG_MSG(LOG_LEVEL_ERROR, "{}", bars.error());
     return 1;
   }
 
-  LOG_MSG(LOG_LEVEL_DEBUG, "{}, {}",
-          static_cast<int>(acc_resp->options_approved_level),
-          static_cast<int>(acc_resp->status));
+  std::println("Currency: {}", bars->currency);
+  for (const auto &stock : bars->bars) {
+    for (const auto &b : stock.second) {
+      std::println("[{}], {}", stock.first, b.timestamp);
+    }
+  }
 }

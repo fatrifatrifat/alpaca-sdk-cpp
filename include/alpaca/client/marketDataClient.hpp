@@ -40,19 +40,67 @@ private:
 
   std::expected<Bars, std::string> GetBarsPimpl(const BarParams &p) {
     if (p.symbols.empty()) {
-      return std::unexpected("Error: Empty symbol");
+      return std::unexpected("Empty symbol");
     }
     if (p.timeframe.empty()) {
-      return std::unexpected("Error: Empty timeframe");
+      return std::unexpected("Empty timeframe");
     }
     if (p.start.empty() || p.end.empty()) {
-      return std::unexpected("Error: Empty start/end");
+      return std::unexpected("Empty start/end");
     }
-    if (p.limit <= 0) {
-      return std::unexpected("Error: Empty limit");
+    if (p.limit.has_value() && p.limit.value() <= 0) {
+      return std::unexpected("Empty limit");
     }
-    if (p.feed.empty()) {
-      return std::unexpected("Error: Empty feed");
+
+    std::string feed;
+    switch (p.feed) {
+    case alpaca::BarFeed::SIP:
+      feed = "sip";
+      break;
+    case alpaca::BarFeed::IEX:
+      feed = "iex";
+      break;
+    case alpaca::BarFeed::Boats:
+      feed = "boats";
+      break;
+    case alpaca::BarFeed::OTC:
+      feed = "otc";
+      break;
+    default:
+      return std::unexpected("Empty/Invalid feed");
+    }
+
+    std::optional<std::string> adjustment;
+    if (p.adjustment.has_value()) {
+      switch (p.adjustment.value()) {
+      case alpaca::BarAdjustment::Raw:
+        adjustment = std::make_optional("raw");
+        break;
+      case alpaca::BarAdjustment::Split:
+        adjustment = std::make_optional("split");
+        break;
+      case alpaca::BarAdjustment::Dividend:
+        adjustment = std::make_optional("divided");
+        break;
+      case alpaca::BarAdjustment::Spinoff:
+        adjustment = std::make_optional("spin-off");
+        break;
+      case alpaca::BarAdjustment::All:
+        adjustment = std::make_optional("all");
+        break;
+      }
+    }
+
+    std::optional<std::string> sort;
+    if (p.sort.has_value()) {
+      switch (p.sort.value()) {
+      case alpaca::BarSort::Asc:
+        sort = std::make_optional("asc");
+        break;
+      case alpaca::BarSort::Desc:
+        sort = std::make_optional("desc");
+        break;
+      }
     }
 
     const std::string query = BuildQuery({
@@ -60,9 +108,13 @@ private:
         {"timeframe", p.timeframe},
         {"start", p.start},
         {"end", p.end},
-        {"limit", std::to_string(p.limit)},
-        {"feed", p.feed},
+        {"limit", std::to_string(p.limit.value_or(1000))},
+        {"adjustment", adjustment.value_or("")},
+        {"asof", p.asof.value_or("")},
+        {"feed", feed},
+        {"currency", p.currency.value_or("")},
         {"page_token", p.page_token.value_or("")},
+        {"sort", sort.value_or("")},
     });
 
     auto resp = cli_.Get(BARS_ENDPOINT + query, env_.GetAuthHeaders());
@@ -126,13 +178,28 @@ public:
     if (p.symbols.empty()) {
       return std::unexpected("Error: Empty symbol");
     }
-    if (p.feed.empty()) {
-      return std::unexpected("Error: Empty feed");
+
+    std::string feed;
+    switch (p.feed) {
+    case alpaca::BarFeed::SIP:
+      feed = "sip";
+      break;
+    case alpaca::BarFeed::IEX:
+      feed = "iex";
+      break;
+    case alpaca::BarFeed::Boats:
+      feed = "boats";
+      break;
+    case alpaca::BarFeed::OTC:
+      feed = "otc";
+      break;
+    default:
+      return std::unexpected("Empty/Invalid feed");
     }
 
     const std::string query = BuildQuery({
         {"symbols", SymbolsEncode(p.symbols)},
-        {"feed", p.feed},
+        {"feed", feed},
     });
 
     auto resp = cli_.Get(LATEST_BARS_ENDPOINT + query, env_.GetAuthHeaders());
