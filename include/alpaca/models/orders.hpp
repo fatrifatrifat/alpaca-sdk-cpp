@@ -3,17 +3,102 @@
 
 namespace alpaca {
 
+enum class OrderSide {
+  buy,
+  sell,
+};
+
+enum class OrderType {
+  market,
+  limit,
+  stop,
+  stop_limit,
+  trailing_stop,
+};
+
+enum class OrderTimeInForce {
+  day,
+  gtc,
+  opg,
+  cls,
+  ioc,
+  fok,
+};
+
+enum class OrderClass {
+  simple,
+  bracket,
+  oco,
+  oto,
+  mleg,
+  crypto,
+};
+
+enum class PositionIntent {
+  buy_to_open,
+  buy_to_close,
+  sell_to_open,
+  sell_to_close,
+};
+
+struct Leg {
+  std::string symbol;
+  long double ratio_qty;
+  std::optional<OrderSide> side;
+  std::optional<PositionIntent> positionIntent;
+};
+
+struct LegsResponse {
+  std::string id;
+  std::string client_order_id;
+};
+
+struct TakeProfit {
+  long double limitPrice;
+};
+
+struct StopLoss {
+  long double stopPrice;
+  long double limitPrice;
+};
+
+struct Quantity {
+  long double qty;
+};
+
+struct Notional {
+  long double notional;
+};
+
+struct TrailPrice {
+  long double trail_price;
+};
+
+struct TrailPercent {
+  long double trail_percent;
+};
+
+using Legs = std::vector<Leg>;
+using ShareAmount = std::variant<Quantity, Notional>;
+using TrailAmount = std::variant<TrailPrice, TrailPercent>;
+
 struct OrderRequest {
   std::string symbol;
-  std::string qty;
-  std::string side;
-  std::string type{"market"};
-  std::string time_in_force{"day"};
-  bool extended_hours{false};
-
-  std::optional<std::string> limit_price;
-  std::optional<std::string> stop_price;
-  std::optional<std::string> client_order_id;
+  ShareAmount amt;
+  OrderSide side;
+  OrderType type;
+  OrderTimeInForce time_in_force;
+  std::optional<long double> limitPrice;
+  std::optional<long double> stopPrice;
+  std::optional<TrailAmount> trailAmt;
+  std::optional<bool> extended_hours;
+  std::optional<std::string> clientOrderID;
+  std::optional<OrderClass> orderClass;
+  std::optional<Legs> legs;
+  std::optional<TakeProfit> takeProfit;
+  std::optional<StopLoss> stopLoss;
+  std::optional<PositionIntent> positionIntent;
+  // TODO: Advanced insutrctions object
 };
 
 struct OrderResponse {

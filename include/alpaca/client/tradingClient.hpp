@@ -6,8 +6,19 @@
 #include <alpaca/models/positions.hpp>
 #include <alpaca/utils/utils.hpp>
 #include <expected>
+#include <print>
 
 namespace alpaca {
+
+inline auto foo(const Mixs &m) {
+  auto r = glz::write_json(m);
+  if (!r) {
+    return std::unexpected(
+        std::format("Error: {}", glz::format_error(r.error())));
+  }
+
+  std::println("{}", r.value());
+}
 
 class TradingClient {
 private:
