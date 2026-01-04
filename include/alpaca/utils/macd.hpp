@@ -1,6 +1,7 @@
 #pragma once
 #include <alpaca/alpaca.hpp>
 #include <optional>
+#include <print>
 #include <vector>
 
 using namespace std::chrono;

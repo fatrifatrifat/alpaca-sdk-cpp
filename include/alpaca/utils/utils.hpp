@@ -1,6 +1,5 @@
 #pragma once
 #include <chrono>
-#include <print>
 #include <thread>
 
 #define ENABLE_LOGGING
@@ -42,6 +41,49 @@ inline auto SleepToNextBoundary(int minutes) {
   auto next =
       now_min + std::chrono::minutes{(minutes - (mins % minutes)) % minutes};
   std::this_thread::sleep_until(next + seconds{2});
+};
+
+inline std::string SymbolsEncode(const std::vector<std::string> &v) {
+  std::string symbols;
+  for (const auto &s : v) {
+    symbols += s;
+    symbols += "%2C";
+  }
+  symbols.erase(symbols.length() - 3, 3);
+  return symbols;
+}
+
+struct QueryBuilder {
+  std::string q;
+  bool first{true};
+
+  void add(std::string_view k, std::string_view v) {
+    if (v.empty()) {
+      return;
+    }
+    if (!first) {
+      q.push_back('&');
+    }
+    first = false;
+    q.append(k);
+    q.push_back('=');
+    q.append(v);
+  }
+
+  void add(std::string_view k, const std::string &v) {
+    add(k, std::string_view(v));
+  }
+  void add(std::string_view k, const char *v) {
+    if (!v || *v == '\0') {
+      return;
+    }
+    add(k, std::string_view(v));
+  }
+  void add(std::string_view k, std::optional<std::string_view> v) {
+    if (v) {
+      add(k, v.value());
+    }
+  }
 };
 
 }; // namespace alpaca::utils

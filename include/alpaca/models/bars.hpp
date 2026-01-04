@@ -35,7 +35,6 @@ struct Bar {
 struct Bars {
   std::map<std::string, std::vector<Bar>> bars;
   std::optional<std::string> next_page_token;
-  std::string currency;
 };
 
 struct BarParams {
@@ -44,7 +43,7 @@ struct BarParams {
   std::string start{"2024-01-03T00:00:00Z"};
   std::string end{"2024-01-04T00:00:00Z"};
   std::optional<int> limit;
-  BarFeed feed{BarFeed::IEX};
+  std::optional<BarFeed> feed;
   std::optional<std::string> page_token;
   std::optional<BarAdjustment> adjustment;
   std::optional<std::string> asof;
@@ -54,12 +53,55 @@ struct BarParams {
 
 struct LatestBarParam {
   std::vector<std::string> symbols;
-  BarFeed feed{BarFeed::IEX};
+  std::optional<BarFeed> feed;
 };
 
 struct LatestBars {
   std::map<std::string, Bar> bars;
 };
+
+constexpr std::optional<std::string_view> ToString(BarFeed f) {
+  switch (f) {
+  case BarFeed::SIP:
+    return "sip";
+  case BarFeed::IEX:
+    return "iex";
+  case BarFeed::Boats:
+    return "boats";
+  case BarFeed::OTC:
+    return "otc";
+  default:
+    return std::nullopt;
+  }
+}
+
+constexpr std::optional<std::string_view> ToString(BarAdjustment a) {
+  switch (a) {
+  case BarAdjustment::Raw:
+    return "raw";
+  case BarAdjustment::Split:
+    return "split";
+  case BarAdjustment::Dividend:
+    return "dividend";
+  case BarAdjustment::Spinoff:
+    return "spinoff";
+  case BarAdjustment::All:
+    return "all";
+  default:
+    return std::nullopt;
+  }
+}
+
+constexpr std::optional<std::string_view> ToString(BarSort s) {
+  switch (s) {
+  case BarSort::Asc:
+    return "asc";
+  case BarSort::Desc:
+    return "desc";
+  default:
+    return std::nullopt;
+  }
+}
 
 }; // namespace alpaca
 
@@ -92,8 +134,7 @@ template <> struct meta<alpaca::Bar> {
 template <> struct meta<alpaca::Bars> {
   using T = alpaca::Bars;
   static constexpr auto value =
-      object("bars", &T::bars, "next_page_token", &T::next_page_token,
-             "currency", &T::currency);
+      object("bars", &T::bars, "next_page_token", &T::next_page_token);
 };
 
 template <> struct meta<alpaca::LatestBars> {
