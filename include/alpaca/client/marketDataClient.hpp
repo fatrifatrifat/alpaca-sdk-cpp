@@ -1,7 +1,7 @@
 #pragma once
 #include <alpaca/client/environment.hpp>
 #include <alpaca/client/httpClient.hpp>
-#include <alpaca/models/bars.hpp>
+#include <alpaca/models/bars/serialize.hpp>
 #include <alpaca/utils/utils.hpp>
 #include <glaze/glaze.hpp>
 #include <string>
