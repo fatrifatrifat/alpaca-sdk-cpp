@@ -106,7 +106,7 @@ struct SymState {
   bool in_position{false};
 };
 
-inline int run(const std::vector<std::string> &symbols) {
+/*inline int run(const std::vector<std::string> &symbols) {
   if (symbols.empty()) {
     LOG_MSG(LOG_LEVEL_ERROR, "Wrong arguments. Intended arguments <symbols>");
     return 1;
@@ -271,6 +271,6 @@ inline int run(const std::vector<std::string> &symbols) {
   }
 
   return 0;
-}
+}*/
 
 }; // namespace alpaca::macd

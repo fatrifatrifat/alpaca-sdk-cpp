@@ -10,16 +10,6 @@
 
 namespace alpaca {
 
-inline auto foo(const Mixs &m) {
-  auto r = glz::write_json(m);
-  if (!r) {
-    return std::unexpected(
-        std::format("Error: {}", glz::format_error(r.error())));
-  }
-
-  std::println("{}", r.value());
-}
-
 class TradingClient {
 private:
   static std::expected<std::string, std::string>
@@ -69,11 +59,13 @@ public:
 
   std::expected<OrderResponse, std::string>
   SubmitOrder(const OrderRequest &request) {
+    std::string json;
     auto order_request = glz::write_json(request);
     if (!order_request) {
       return std::unexpected(
           std::format("Error: {}", glz::format_error(order_request.error())));
     }
+    std::println("Order request: {}", order_request.value());
 
     auto resp = cli_.Post(ORDERS_ENDPOINT, env_.GetAuthHeaders(),
                           order_request.value(), "application/json");
@@ -93,6 +85,7 @@ public:
       return std::unexpected(
           std::format("Error: {}", glz::format_error(error, resp->body)));
     }
+    std::println("Final Order req: {}", resp->body);
 
     return response;
   }
