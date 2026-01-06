@@ -2,7 +2,7 @@
 #include <alpaca/client/environment.hpp>
 #include <alpaca/client/httpClient.hpp>
 #include <alpaca/models/accounts.hpp>
-#include <alpaca/models/orders.hpp>
+#include <alpaca/models/orders/serialize.hpp>
 #include <alpaca/models/positions.hpp>
 #include <alpaca/utils/utils.hpp>
 #include <expected>
