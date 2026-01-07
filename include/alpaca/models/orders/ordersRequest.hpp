@@ -12,21 +12,21 @@ struct OrderRequest {
   ShareAmount amt;
   OrderSide side;
   OrderType type;
-  OrderTimeInForce time_in_force;
+  OrderTimeInForce timeInForce;
 
   std::optional<LimitPrice> limitPrice;
   std::optional<StopPrice> stopPrice;
 
   std::optional<TrailAmount> trailAmt;
 
-  std::optional<bool> extended_hours;
+  std::optional<bool> extendedHours;
   std::optional<std::string> clientOrderID;
   std::optional<OrderClass> orderClass;
   std::optional<Legs> legs;
 
   std::optional<TakeProfit> takeProfit;
   std::optional<StopLoss> stopLoss;
-  std::optional<PositionIntent> position_intent;
+  std::optional<PositionIntent> positionIntent;
 };
 
 struct OrderRequestWire {
@@ -37,22 +37,22 @@ struct OrderRequestWire {
 
   OrderSide side;
   OrderType type;
-  OrderTimeInForce time_in_force;
+  OrderTimeInForce timeInForce;
 
-  std::optional<long double> limit_price;
-  std::optional<long double> stop_price;
+  std::optional<LimitPrice> limitPrice;
+  std::optional<StopPrice> stopPrice;
 
-  std::optional<bool> extended_hours;
+  std::optional<bool> extendedHours;
   std::optional<std::string> clientOrderID;
   std::optional<OrderClass> orderClass;
   std::optional<Legs> legs;
 
-  std::optional<long double> trail_price;
-  std::optional<long double> trail_percent;
+  std::optional<long double> trailPrice;
+  std::optional<long double> trailPercent;
 
-  std::optional<TakeProfit> take_profit;
-  std::optional<StopLoss> stop_loss;
-  std::optional<PositionIntent> position_intent;
+  std::optional<TakeProfit> takeProfit;
+  std::optional<StopLoss> stopLoss;
+  std::optional<PositionIntent> positionIntent;
 };
 
 inline OrderRequestWire toWire(const OrderRequest &r) {
@@ -60,17 +60,17 @@ inline OrderRequestWire toWire(const OrderRequest &r) {
   w.symbol = r.symbol;
   w.side = r.side;
   w.type = r.type;
-  w.time_in_force = r.time_in_force;
+  w.timeInForce = r.timeInForce;
 
-  w.limit_price = r.limitPrice;
-  w.stop_price = r.stopPrice;
-  w.extended_hours = r.extended_hours;
+  w.limitPrice = r.limitPrice;
+  w.stopPrice = r.stopPrice;
+  w.extendedHours = r.extendedHours;
   w.clientOrderID = r.clientOrderID;
   w.orderClass = r.orderClass;
   w.legs = r.legs;
-  w.take_profit = r.takeProfit;
-  w.stop_loss = r.stopLoss;
-  w.position_intent = r.position_intent;
+  w.takeProfit = r.takeProfit;
+  w.stopLoss = r.stopLoss;
+  w.positionIntent = r.positionIntent;
 
   std::visit(
       [&](const auto &x) {
@@ -87,9 +87,9 @@ inline OrderRequestWire toWire(const OrderRequest &r) {
         [&](const auto &x) {
           using X = std::decay_t<decltype(x)>;
           if constexpr (std::is_same_v<X, TrailPrice>)
-            w.trail_price = x.v;
+            w.trailPrice = x.v;
           if constexpr (std::is_same_v<X, TrailPercent>)
-            w.trail_percent = x.v;
+            w.trailPercent = x.v;
         },
         *r.trailAmt);
   }
@@ -102,17 +102,17 @@ inline std::optional<std::string> fromWire(OrderRequest &r,
   r.symbol = w.symbol;
   r.side = w.side;
   r.type = w.type;
-  r.time_in_force = w.time_in_force;
+  r.timeInForce = w.timeInForce;
 
-  r.limitPrice = w.limit_price;
-  r.stopPrice = w.stop_price;
-  r.extended_hours = w.extended_hours;
+  r.limitPrice = w.limitPrice;
+  r.stopPrice = w.stopPrice;
+  r.extendedHours = w.extendedHours;
   r.clientOrderID = w.clientOrderID;
   r.orderClass = w.orderClass;
   r.legs = w.legs;
-  r.takeProfit = w.take_profit;
-  r.stopLoss = w.stop_loss;
-  r.position_intent = w.position_intent;
+  r.takeProfit = w.takeProfit;
+  r.stopLoss = w.stopLoss;
+  r.positionIntent = w.positionIntent;
 
   if (w.qty && w.notional) {
     return std::make_optional("qty and notional are mutually exclusive");
@@ -124,14 +124,14 @@ inline std::optional<std::string> fromWire(OrderRequest &r,
   else
     return std::make_optional("either qty or notional is required");
 
-  if (w.trail_price && w.trail_percent) {
+  if (w.trailPrice && w.trailPercent) {
     return std::make_optional(
         "trail_price and trail_percent are mutually exclusive");
   }
-  if (w.trail_price)
-    r.trailAmt = TrailAmount{TrailPrice{*w.trail_price}};
-  else if (w.trail_percent)
-    r.trailAmt = TrailAmount{TrailPercent{*w.trail_percent}};
+  if (w.trailPrice)
+    r.trailAmt = TrailAmount{TrailPrice{*w.trailPrice}};
+  else if (w.trailPercent)
+    r.trailAmt = TrailAmount{TrailPercent{*w.trailPercent}};
   else
     r.trailAmt.reset();
 

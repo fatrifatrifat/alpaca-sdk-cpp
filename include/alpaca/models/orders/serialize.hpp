@@ -38,44 +38,44 @@ template <> struct meta<alpaca::PositionIntent> {
 template <> struct meta<alpaca::Leg> {
   using T = alpaca::Leg;
   static constexpr auto value =
-      object("symbol", &T::symbol, "ratio_qty", &T::ratio_qty, "side", &T::side,
+      object("symbol", &T::symbol, "ratio_qty", &T::ratioQty, "side", &T::side,
              "position_intent", &T::positionIntent);
 };
 
 template <> struct meta<alpaca::LegsResponse> {
   using T = alpaca::LegsResponse;
   static constexpr auto value =
-      object("id", &T::id, "client_order_id", &T::client_order_id);
+      object("id", &T::id, "client_order_id", &T::clientOrderID);
 };
 
 template <> struct meta<alpaca::StopLoss> {
   using T = alpaca::StopLoss;
   static constexpr auto value =
-      object("stop_price", &T::stop_price, "limit_price", &T::limit_price);
+      object("stop_price", &T::stopPrice, "limit_price", &T::limitPrice);
 };
 
 template <> struct meta<alpaca::OrderRequest> {
   using T = alpaca::OrderRequest;
   static constexpr auto value = object(
       "symbol", &T::symbol, "amt", &T::amt, "side", &T::side, "type", &T::type,
-      "time_in_force", &T::time_in_force, "limit_price", &T::limitPrice,
+      "time_in_force", &T::timeInForce, "limit_price", &T::limitPrice,
       "stop_price", &T::stopPrice, "trail_amt", &T::trailAmt, "extended_hours",
-      &T::extended_hours, "client_order_id", &T::clientOrderID, "order_class",
+      &T::extendedHours, "client_order_id", &T::clientOrderID, "order_class",
       &T::orderClass, "legs", &T::legs, "take_profit", &T::takeProfit,
-      "stop_loss", &T::stopLoss, "position_intent", &T::position_intent);
+      "stop_loss", &T::stopLoss, "position_intent", &T::positionIntent);
 };
 
 template <> struct meta<alpaca::OrderRequestWire> {
   using T = alpaca::OrderRequestWire;
   static constexpr auto value = glz::object(
       "symbol", &T::symbol, "qty", &T::qty, "notional", &T::notional, "side",
-      &T::side, "type", &T::type, "time_in_force", &T::time_in_force,
-      "limit_price", &T::limit_price, "stop_price", &T::stop_price,
-      "extended_hours", &T::extended_hours, "client_order_id",
-      &T::clientOrderID, "order_class", &T::orderClass, "legs", &T::legs,
-      "trail_price", &T::trail_price, "trail_percent", &T::trail_percent,
-      "take_profit", &T::take_profit, "stop_loss", &T::stop_loss,
-      "position_intent", &T::position_intent);
+      &T::side, "type", &T::type, "time_in_force", &T::timeInForce,
+      "limit_price", &T::limitPrice, "stop_price", &T::stopPrice,
+      "extended_hours", &T::extendedHours, "client_order_id", &T::clientOrderID,
+      "order_class", &T::orderClass, "legs", &T::legs, "trail_price",
+      &T::trailPrice, "trail_percent", &T::trailPercent, "take_profit",
+      &T::takeProfit, "stop_loss", &T::stopLoss, "position_intent",
+      &T::positionIntent);
 };
 
 template <> struct to<JSON, alpaca::OrderRequest> {
@@ -103,22 +103,21 @@ template <> struct from<JSON, alpaca::OrderRequest> {
 template <> struct meta<alpaca::OrderResponse> {
   using T = alpaca::OrderResponse;
   static constexpr auto value = object(
-      "id", &T::id, "client_order_id", &T::client_order_id, "created_at",
-      &T::created_at, "updated_at", &T::updated_at, "submitted_at",
-      &T::submitted_at, "filled_at", &T::filled_at, "expired_at",
-      &T::expired_at, "canceled_at", &T::canceled_at, "failed_at",
-      &T::failed_at, "replaced_at", &T::replaced_at, "replaced_by",
-      &T::replaced_by, "replaces", &T::replaces, "asset_id", &T::asset_id,
-      "symbol", &T::symbol, "asset_class", &T::asset_class, "notional",
-      &T::notional, "qty", &T::qty, "filled_qty", &T::filled_qty,
-      "filled_avg_price", &T::filled_avg_price, "order_class", &T::order_class,
-      "order_type", &T::order_type, "type", &T::type, "side", &T::side,
-      "position_intent", &T::position_intent, "time_in_force",
-      &T::time_in_force, "limit_price", &T::limit_price, "stop_price",
-      &T::stop_price, "status", &T::status, "extended_hours",
-      &T::extended_hours, "legs", &T::legs, "trail_percent", &T::trail_percent,
-      "trail_price", &T::trail_price, "hwm", &T::hwm, "subtag", &T::subtag,
-      "source", &T::source, "expires_at", &T::expires_at);
+      "id", &T::id, "client_order_id", &T::clientOrderID, "created_at",
+      &T::createdAt, "updated_at", &T::updatedAt, "submitted_at",
+      &T::submittedAt, "filled_at", &T::filledAt, "expired_at", &T::expiredAt,
+      "canceled_at", &T::canceledAt, "failed_at", &T::failedAt, "replaced_at",
+      &T::replacedAt, "replaced_by", &T::replacedBy, "replaces", &T::replaces,
+      "asset_id", &T::assetID, "symbol", &T::symbol, "asset_class",
+      &T::assetClass, "notional", &T::notional, "qty", &T::qty, "filled_qty",
+      &T::filledQty, "filled_avg_price", &T::filledAvgPrice, "order_class",
+      &T::orderClass, "order_type", &T::orderType, "type", &T::type, "side",
+      &T::side, "position_intent", &T::positionIntent, "time_in_force",
+      &T::timeInForce, "limit_price", &T::limitPrice, "stop_price",
+      &T::stopPrice, "status", &T::status, "extended_hours", &T::extendedHours,
+      "legs", &T::legs, "trail_percent", &T::trailPercent, "trail_price",
+      &T::trailPrice, "hwm", &T::hwm, "subtag", &T::subtag, "source",
+      &T::source, "expires_at", &T::expiresAt);
 };
 
 }; // namespace glz
