@@ -14,6 +14,11 @@ endif()
 option(ALPACA_ENABLE_SSL "Enable HTTPS support (OpenSSL) for cpp-httplib" ON)
 option(ALPACA_BUILD_PLAYGROUND "Build playground.cpp executable" ON)
 option(ALPACA_BUILD_EXAMPLES "Build examples/ executables" ON)
+option(ALPACA_BUILD_TESTS "Build unit/integration tests" ON)
+if (ALPACA_BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
+endif()
 
 include(FetchContent)
 
