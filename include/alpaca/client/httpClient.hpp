@@ -42,8 +42,7 @@ private:
   }
 
 public:
-  explicit HttpClient(const std::string &host) : cli_(host) {
-  }
+  explicit HttpClient(const std::string &host) : cli_(host) {}
 
   std::expected<alpaca::Status, std::string>
   Get(const std::string &path, const httplib::Headers &headers) {

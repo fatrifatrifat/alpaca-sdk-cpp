@@ -10,7 +10,8 @@
 
 namespace alpaca {
 
-class TradingClient {
+template <class Env = Environment, class Http = HttpClient>
+class TradingClientT {
 private:
   static std::expected<std::string, std::string>
   BuildClosePositionQuery(const LiquidationAmount &a) {
@@ -33,8 +34,10 @@ private:
   }
 
 public:
-  explicit TradingClient(const Environment &env)
+  explicit TradingClientT(const Env &env)
       : env_(env), cli_(env_.GetBaseUrl()) {}
+
+  TradingClientT(const Env &env, Http cli) : env_(env), cli_(std::move(cli)) {}
 
   std::expected<Account, std::string> GetAccount() {
     auto resp = cli_.Get(ACCOUNT_ENDPOINT, env_.GetAuthHeaders());
@@ -167,12 +170,14 @@ public:
   }
 
 private:
-  const Environment &env_;
-  HttpClient cli_;
+  const Env &env_;
+  Http cli_;
 
   static constexpr const char *ACCOUNT_ENDPOINT = "/v2/account";
   static constexpr const char *ORDERS_ENDPOINT = "/v2/orders";
   static constexpr const char *POSITIONS_ENDPOINT = "/v2/positions";
 };
+
+using TradingClient = TradingClientT<Environment, HttpClient>;
 
 }; // namespace alpaca

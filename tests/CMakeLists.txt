@@ -15,6 +15,8 @@ add_executable(alpaca_tests
   unit/testAccountSerialize.cpp
   unit/testBarsSerialize.cpp
   unit/testPositionSerialize.cpp
+  unit/testTradingClient.cpp
+  unit/testMarketClient.cpp
 )
 
 target_link_libraries(alpaca_tests

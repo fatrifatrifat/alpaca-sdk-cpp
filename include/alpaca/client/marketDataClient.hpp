@@ -8,7 +8,8 @@
 
 namespace alpaca {
 
-class MarketDataClient {
+template <class Env = Environment, class Http = HttpClient>
+class MarketDataClientT {
 private:
   std::expected<Bars, std::string> GetBarsPimpl(const BarParams &p) {
     if (p.symbols.empty()) {
@@ -65,8 +66,11 @@ private:
   }
 
 public:
-  explicit MarketDataClient(const Environment &env)
+  explicit MarketDataClientT(const Env &env)
       : env_(env), cli_(env_.GetDataUrl()) {}
+
+  MarketDataClientT(const Env &env, Http cli)
+      : env_(env), cli_(std::move(cli)) {}
 
   std::expected<Bars, std::string> GetBars(const BarParams &p) {
     std::map<std::string, std::vector<Bar>> barsBySymbol;
@@ -133,11 +137,13 @@ public:
   }
 
 private:
-  const Environment &env_;
-  HttpClient cli_;
+  const Env &env_;
+  Http cli_;
 
   static constexpr const char *BARS_ENDPOINT = "/v2/stocks/bars?";
   static constexpr const char *LATEST_BARS_ENDPOINT = "/v2/stocks/bars/latest?";
 };
+
+using MarketDataClient = MarketDataClientT<Environment, HttpClient>;
 
 }; // namespace alpaca

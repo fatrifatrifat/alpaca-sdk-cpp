@@ -22,11 +22,13 @@ struct Leg {
   long double ratioQty;
   std::optional<OrderSide> side;
   std::optional<PositionIntent> positionIntent;
+  auto operator<=>(const Leg &) const = default;
 };
 
 struct LegsResponse {
   std::string id;
   std::string clientOrderID;
+  auto operator<=>(const LegsResponse &) const = default;
 };
 
 using Legs = std::vector<Leg>;
@@ -35,27 +37,33 @@ using StopPrice = long double;
 
 struct Quantity {
   long double v{};
+  auto operator<=>(const Quantity &) const = default;
 };
 struct Notional {
   long double v{};
+  auto operator<=>(const Notional &) const = default;
 };
 using ShareAmount = std::variant<Quantity, Notional>;
 
 struct TrailPrice {
   long double v{};
+  auto operator<=>(const TrailPrice &) const = default;
 };
 struct TrailPercent {
   long double v{};
+  auto operator<=>(const TrailPercent &) const = default;
 };
 using TrailAmount = std::variant<TrailPrice, TrailPercent>;
 
 struct TakeProfit {
   StopPrice stopPrice{};
+  auto operator<=>(const TakeProfit &) const = default;
 };
 
 struct StopLoss {
   StopPrice stopPrice{};
   LimitPrice limitPrice{};
+  auto operator<=>(const StopLoss &) const = default;
 };
 
 }; // namespace alpaca
