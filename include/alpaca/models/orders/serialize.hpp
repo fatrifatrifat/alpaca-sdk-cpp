@@ -34,11 +34,6 @@ template <> struct meta<alpaca::PositionIntent> {
       glz::enumerate(buy_to_open, buy_to_close, sell_to_open, sell_to_close);
 };
 
-template <> struct meta<alpaca::OrderAssetClass> {
-  using enum alpaca::OrderAssetClass;
-  static constexpr auto value = glz::enumerate(us_equity, us_option, crypto);
-};
-
 // Structs
 template <> struct meta<alpaca::Leg> {
   using T = alpaca::Leg;

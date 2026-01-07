@@ -3,7 +3,7 @@
 #include <alpaca/client/httpClient.hpp>
 #include <alpaca/models/accounts/serialize.hpp>
 #include <alpaca/models/orders/serialize.hpp>
-#include <alpaca/models/positions.hpp>
+#include <alpaca/models/positions/serialize.hpp>
 #include <alpaca/utils/utils.hpp>
 #include <expected>
 #include <print>
@@ -65,7 +65,6 @@ public:
       return std::unexpected(
           std::format("Error: {}", glz::format_error(order_request.error())));
     }
-    std::println("Order request: {}", order_request.value());
 
     auto resp = cli_.Post(ORDERS_ENDPOINT, env_.GetAuthHeaders(),
                           order_request.value(), "application/json");
@@ -85,7 +84,6 @@ public:
       return std::unexpected(
           std::format("Error: {}", glz::format_error(error, resp->body)));
     }
-    std::println("Final Order req: {}", resp->body);
 
     return response;
   }
@@ -107,6 +105,7 @@ public:
       return std::unexpected(
           std::format("Error: {}", glz::format_error(error, resp->body)));
     }
+    std::println("Positions body: {}", resp->body);
 
     return positions;
   }

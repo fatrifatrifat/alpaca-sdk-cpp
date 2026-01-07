@@ -6,11 +6,7 @@ int main(int argc, char **argv) {
   auto market = alpaca::MarketDataClient(env);
   auto trade = alpaca::TradingClient(env);
 
-  auto resp =
-      trade.SubmitOrder({"AAPL", alpaca::Quantity{10}, alpaca::OrderSide::buy,
-                         alpaca::OrderType::market,
-                         alpaca::OrderTimeInForce::day, alpaca::LimitPrice{0.5},
-                         alpaca::StopPrice{0.3f}, alpaca::TrailPercent{1.5f}});
+  auto resp = trade.GetAllOpenPositions();
   if (!resp) {
     std::println("{}", resp.error());
   }
