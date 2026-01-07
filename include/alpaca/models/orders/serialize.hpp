@@ -34,6 +34,11 @@ template <> struct meta<alpaca::PositionIntent> {
       glz::enumerate(buy_to_open, buy_to_close, sell_to_open, sell_to_close);
 };
 
+template <> struct meta<alpaca::OrderAssetClass> {
+  using enum alpaca::OrderAssetClass;
+  static constexpr auto value = glz::enumerate(us_equity, us_option, crypto);
+};
+
 // Structs
 template <> struct meta<alpaca::Leg> {
   using T = alpaca::Leg;
@@ -112,12 +117,12 @@ template <> struct meta<alpaca::OrderResponse> {
       &T::assetClass, "notional", &T::notional, "qty", &T::qty, "filled_qty",
       &T::filledQty, "filled_avg_price", &T::filledAvgPrice, "order_class",
       &T::orderClass, "order_type", &T::orderType, "type", &T::type, "side",
-      &T::side, "position_intent", &T::positionIntent, "time_in_force",
-      &T::timeInForce, "limit_price", &T::limitPrice, "stop_price",
-      &T::stopPrice, "status", &T::status, "extended_hours", &T::extendedHours,
-      "legs", &T::legs, "trail_percent", &T::trailPercent, "trail_price",
+      &T::side, "time_in_force", &T::timeInForce, "limit_price", &T::limitPrice,
+      "stop_price", &T::stopPrice, "status", &T::status, "position_intent",
+      &T::position_intent, "extended_hours", &T::extendedHours, "legs",
+      &T::legs, "trail_percent", &T::trailPercent, "trail_price",
       &T::trailPrice, "hwm", &T::hwm, "subtag", &T::subtag, "source",
-      &T::source, "expires_at", &T::expiresAt);
+      &T::source, "expires_at", &T::expiredAt);
 };
 
 }; // namespace glz

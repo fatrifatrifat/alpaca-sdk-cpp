@@ -4,58 +4,75 @@
 
 namespace alpaca {
 
+enum class OrderAssetClass { us_equity, us_option, crypto };
+enum class OrderStatus {
+  new_,
+  partially_filled,
+  filled,
+  done_for_day,
+  canceled,
+  expired,
+  replaced,
+  pending_cancel,
+  pending_replace,
+  accepted,
+  pending_new,
+  accepted_for_bidding,
+  stopped,
+  rejected,
+  suspended,
+  calculated
+};
+
 struct OrderResponse {
   std::string id;
-  std::string client_order_id;
+  std::string clientOrderID;
 
-  std::string created_at;
-  std::string updated_at;
-  std::string submitted_at;
+  std::string createdAt;
+  std::string updatedAt;
+  std::string submittedAt;
 
-  std::optional<std::string> filled_at;
-  std::optional<std::string> expired_at;
-  std::optional<std::string> canceled_at;
-  std::optional<std::string> failed_at;
-  std::optional<std::string> replaced_at;
+  std::optional<std::string> filledAt;
+  std::optional<std::string> expiredAt;
+  std::optional<std::string> canceledAt;
+  std::optional<std::string> failedAt;
+  std::optional<std::string> replacedAt;
 
-  std::optional<std::string> replaced_by;
+  std::optional<std::string> replacedBy;
   std::optional<std::string> replaces;
 
-  std::string asset_id;
-  std::string symbol;
-  std::string asset_class;
+  std::optional<std::string> assetID;
+  std::optional<std::string> symbol;
+  std::optional<std::string> assetClass;
 
   std::optional<std::string> notional;
+  std::optional<std::string> qty;
 
-  std::string qty;
-  std::string filled_qty;
-  std::optional<std::string> filled_avg_price;
+  std::string filledQty;
+  std::optional<std::string> filledAvgPrice;
 
-  std::string order_class;
-  std::string order_type;
-  std::string type;
-  std::string side;
+  std::optional<std::string> orderClass;
+  std::string orderType;
+  OrderType type;
+  OrderSide side;
 
-  std::optional<std::string> position_intent;
-
-  std::string time_in_force;
-
-  std::optional<std::string> limit_price;
-  std::optional<std::string> stop_price;
+  OrderTimeInForce timeInForce;
+  std::optional<std::string> limitPrice;
+  std::optional<std::string> stopPrice;
 
   std::string status;
 
-  bool extended_hours{false};
+  std::optional<std::string> position_intent;
+
+  bool extendedHours{false};
 
   std::optional<glz::generic> legs;
-  std::optional<std::string> trail_percent;
-  std::optional<std::string> trail_price;
+  std::optional<std::string> trailPercent;
+  std::optional<std::string> trailPrice;
   std::optional<std::string> hwm;
 
   std::optional<std::string> subtag;
   std::optional<std::string> source;
-
-  std::optional<std::string> expires_at;
 };
 
 }; // namespace alpaca
