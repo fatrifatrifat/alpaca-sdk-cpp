@@ -1,6 +1,4 @@
-#include <alpaca/client/marketDataClient.hpp>
-#include <alpaca/models/bars/serialize.hpp>
-#include <alpaca/utils/utils.hpp>
+#include <alpaca/alpaca.hpp>
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>

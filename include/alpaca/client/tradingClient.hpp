@@ -1,9 +1,7 @@
 #pragma once
 #include <alpaca/client/environment.hpp>
 #include <alpaca/client/httpClient.hpp>
-#include <alpaca/models/accounts/serialize.hpp>
-#include <alpaca/models/orders/serialize.hpp>
-#include <alpaca/models/positions/serialize.hpp>
+#include <alpaca/models/trading/serialize.hpp>
 #include <alpaca/utils/utils.hpp>
 #include <expected>
 #include <print>

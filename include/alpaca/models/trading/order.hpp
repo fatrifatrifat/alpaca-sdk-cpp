@@ -1,11 +1,67 @@
 #pragma once
-#include <alpaca/models/orders/common.hpp>
-#include <optional>
-#include <string>
-#include <type_traits>
-#include <variant>
+#include <glaze/glaze.hpp>
 
 namespace alpaca {
+
+enum class OrderSide { buy, sell };
+enum class OrderType { market, limit, stop, stop_limit, trailing_stop };
+enum class OrderTimeInForce { day, gtc, opg, cls, ioc, fok };
+enum class PositionIntent {
+  buy_to_open,
+  buy_to_close,
+  sell_to_open,
+  sell_to_close
+};
+enum class OrderClass { simple, bracket, oco, oto, mleg, crypto };
+
+struct Leg {
+  std::string symbol;
+  long double ratioQty;
+  std::optional<OrderSide> side;
+  std::optional<PositionIntent> positionIntent;
+  auto operator<=>(const Leg &) const = default;
+};
+
+struct LegsResponse {
+  std::string id;
+  std::string clientOrderID;
+  auto operator<=>(const LegsResponse &) const = default;
+};
+
+using Legs = std::vector<Leg>;
+using LimitPrice = long double;
+using StopPrice = long double;
+
+struct Quantity {
+  long double v{};
+  auto operator<=>(const Quantity &) const = default;
+};
+struct Notional {
+  long double v{};
+  auto operator<=>(const Notional &) const = default;
+};
+using ShareAmount = std::variant<Quantity, Notional>;
+
+struct TrailPrice {
+  long double v{};
+  auto operator<=>(const TrailPrice &) const = default;
+};
+struct TrailPercent {
+  long double v{};
+  auto operator<=>(const TrailPercent &) const = default;
+};
+using TrailAmount = std::variant<TrailPrice, TrailPercent>;
+
+struct TakeProfit {
+  StopPrice stopPrice{};
+  auto operator<=>(const TakeProfit &) const = default;
+};
+
+struct StopLoss {
+  StopPrice stopPrice{};
+  LimitPrice limitPrice{};
+  auto operator<=>(const StopLoss &) const = default;
+};
 
 struct OrderRequest {
   std::string symbol;
@@ -137,5 +193,56 @@ inline std::optional<std::string> fromWire(OrderRequest &r,
 
   return std::nullopt;
 }
+
+struct OrderResponse {
+  std::string id;
+  std::string clientOrderID;
+
+  std::string createdAt;
+  std::string updatedAt;
+  std::string submittedAt;
+
+  std::optional<std::string> filledAt;
+  std::optional<std::string> expiredAt;
+  std::optional<std::string> canceledAt;
+  std::optional<std::string> failedAt;
+  std::optional<std::string> replacedAt;
+
+  std::optional<std::string> replacedBy;
+  std::optional<std::string> replaces;
+
+  std::optional<std::string> assetID;
+  std::optional<std::string> symbol;
+  std::optional<std::string> assetClass;
+
+  std::optional<std::string> notional;
+  std::optional<std::string> qty;
+
+  std::string filledQty;
+  std::optional<std::string> filledAvgPrice;
+
+  std::optional<std::string> orderClass;
+  std::string orderType;
+  OrderType type;
+  OrderSide side;
+
+  OrderTimeInForce timeInForce;
+  std::optional<std::string> limitPrice;
+  std::optional<std::string> stopPrice;
+
+  std::string status;
+
+  std::optional<std::string> position_intent;
+
+  bool extendedHours{false};
+
+  std::optional<glz::generic> legs;
+  std::optional<std::string> trailPercent;
+  std::optional<std::string> trailPrice;
+  std::optional<std::string> hwm;
+
+  std::optional<std::string> subtag;
+  std::optional<std::string> source;
+};
 
 }; // namespace alpaca

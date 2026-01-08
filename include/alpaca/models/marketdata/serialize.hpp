@@ -1,5 +1,6 @@
 #pragma once
-#include <alpaca/models/bars/bars.hpp>
+#include <alpaca/models/marketdata/bars.hpp>
+#include <glaze/glaze.hpp>
 
 namespace glz {
 
