@@ -77,6 +77,57 @@ struct FakeHttpClient {
       return onDelete(path, h);
     return Response{200, "{}"};
   }
+
+  template <class T>
+  std::expected<T, alpaca::APIError>
+  Request(alpaca::Req type, const std::string &path, const Headers &headers,
+          std::optional<std::string> body = std::nullopt,
+          std::optional<std::string> content_type = std::nullopt) {
+    std::expected<Response, std::string> raw = std::unexpected("uninitialized");
+
+    switch (type) {
+    case alpaca::Req::GET:
+      raw = Get(path, headers);
+      break;
+
+    case alpaca::Req::POST:
+      if (!body || !content_type) {
+        return std::unexpected(alpaca::APIError{
+            alpaca::ErrorCode::Transport,
+            "POST requires body and content_type in FakeHttpClient"});
+      }
+      raw = Post(path, headers, *body, *content_type);
+      break;
+
+    case alpaca::Req::DELETE:
+      raw = Delete(path, headers);
+      break;
+
+    default:
+      return std::unexpected(
+          alpaca::APIError{alpaca::ErrorCode::Unknown, "Unsupported Req"});
+    }
+
+    if (!raw) {
+      return std::unexpected(
+          alpaca::APIError{alpaca::ErrorCode::Transport, raw.error()});
+    }
+
+    if (!alpaca::utils::IsSuccess(raw->status)) {
+      return std::unexpected(
+          alpaca::APIError{alpaca::ErrorCode::HTTPCode,
+                           std::format("HTTP {}: {}", raw->status, raw->body)});
+    }
+
+    T obj{};
+    auto err = glz::read_json(obj, raw->body);
+    if (err) {
+      return std::unexpected(alpaca::APIError{
+          alpaca::ErrorCode::JSONParsing, glz::format_error(err, raw->body)});
+    }
+
+    return obj;
+  }
 };
 
 std::string account_json_minimal() {
@@ -142,7 +193,7 @@ std::string positions_json_one() {
 
 } // namespace
 
-TEST_CASE("TradingClient.GetAccount: success parses Account via glaze") {
+TEST_CASE("TradingClient.GetAccountReq: success parses Account via glaze") {
   TestEnvironment env{};
   FakeHttpClient http{env.GetBaseUrl()};
 
@@ -174,7 +225,9 @@ TEST_CASE("TradingClient.GetAccount: non-2xx returns HTTP error") {
 
   auto acc = cli.GetAccount();
   REQUIRE_FALSE(acc.has_value());
-  REQUIRE_THAT(acc.error(), Catch::Matchers::ContainsSubstring("HTTP 401"));
+  REQUIRE(acc.error().code == alpaca::ErrorCode::HTTPCode);
+  REQUIRE_THAT(acc.error().message,
+               Catch::Matchers::ContainsSubstring("HTTP 401"));
 }
 
 TEST_CASE("TradingClient.SubmitOrder: sends wire JSON (qty/notional), not "
@@ -315,7 +368,7 @@ TEST_CASE(
 
     auto res = cli.ClosePosition(p);
     REQUIRE_FALSE(res.has_value());
-    REQUIRE_THAT(res.error(), Catch::Matchers::ContainsSubstring(
-                                  "Unvalid liquidation amount query"));
+    REQUIRE_THAT(res.error().message, Catch::Matchers::ContainsSubstring(
+                                          "Unvalid liquidation amount query"));
   }
 }
