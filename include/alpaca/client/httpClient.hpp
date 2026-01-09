@@ -30,12 +30,7 @@ enum class ErrorCode {
 struct APIError {
   ErrorCode code;
   std::string message;
-  std::optional<int> status;
-};
-
-struct Status {
-  int status;
-  std::string body;
+  std::optional<int> status = std::nullopt;
 };
 
 enum class Req {
@@ -97,9 +92,9 @@ public:
       break;
     case Req::POST:
       if (!body || !content_type) {
-        return std::unexpected(alpaca::APIError{
-            alpaca::ErrorCode::Transport,
-            "POST requires body and content_type in FakeHttpClient"});
+        return std::unexpected(
+            alpaca::APIError{alpaca::ErrorCode::IllArgument,
+                             "POST requires body and content_type"});
       }
       resp = cli_.Post(path, headers, *body, *content_type);
       break;
@@ -122,59 +117,11 @@ public:
     auto error = glz::read_json(obj, resp->body);
     if (error) {
       return std::unexpected(APIError{ErrorCode::JSONParsing,
-                                      glz::format_error(error, resp->body)});
+                                      glz::format_error(error, resp->body),
+                                      resp->status});
     }
 
     return obj;
-  }
-
-  std::expected<alpaca::Status, std::string>
-  Get(const std::string &path, const httplib::Headers &headers) {
-    if (!cli_.is_valid()) {
-      return std::unexpected(
-          "SSLClient is not valid (bad host/port or SSL init failed).");
-    }
-
-    auto resp = cli_.Get(path, headers);
-    if (!resp) {
-      return std::unexpected(
-          std::format("Transport error: {}", to_string(resp.error())));
-    }
-
-    return Status{resp->status, resp->body};
-  }
-
-  std::expected<alpaca::Status, std::string>
-  Post(const std::string &path, const httplib::Headers &headers,
-       const std::string &body, const std::string &content_type) {
-    if (!cli_.is_valid()) {
-      return std::unexpected(
-          "SSLClient is not valid (bad host/port or SSL init failed).");
-    }
-
-    auto resp = cli_.Post(path, headers, body, content_type);
-    if (!resp) {
-      return std::unexpected(
-          std::format("Transport error: {}", to_string(resp.error())));
-    }
-
-    return Status{resp->status, resp->body};
-  }
-
-  std::expected<alpaca::Status, std::string>
-  Delete(const std::string &path, const httplib::Headers &headers) {
-    if (!cli_.is_valid()) {
-      return std::unexpected(
-          "SSLClient is not valid (bad host/port or SSL init failed).");
-    }
-
-    auto resp = cli_.Delete(path, headers);
-    if (!resp) {
-      return std::unexpected(
-          std::format("Transport error: {}", to_string(resp.error())));
-    }
-
-    return Status{resp->status, resp->body};
   }
 
 private:
