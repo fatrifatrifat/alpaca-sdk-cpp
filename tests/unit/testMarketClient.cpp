@@ -5,6 +5,7 @@
 #include <catch2/matchers/catch_matchers_string.hpp>
 
 #include <expected>
+#include <print>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -16,7 +17,7 @@ struct TestEnvironment {
   using Headers = std::vector<std::pair<std::string, std::string>>;
 
   std::string dataUrl = "http://unit.test.data";
-  Headers headers = {{"K", "V"}};
+  Headers headers = {{"APCA-API-KEY-ID", "k"}, {"APCA-API-SECRET-KEY", "s"}};
 
   std::string GetDataUrl() const { return dataUrl; }
   Headers GetAuthHeaders() const { return headers; }
@@ -51,6 +52,41 @@ struct FakeHttpClient {
                              std::string(path));
     }
     return it->second;
+  }
+
+  template <class T>
+  std::expected<T, alpaca::APIError>
+  Request(alpaca::Req type, const std::string &path, const Headers &headers,
+          std::optional<std::string> body = std::nullopt,
+          std::optional<std::string> content_type = std::nullopt) {
+    (void)body;
+    (void)content_type;
+
+    if (type != alpaca::Req::GET) {
+      return std::unexpected(alpaca::APIError{
+          alpaca::ErrorCode::Unknown,
+          "FakeHttpClient only supports GET in this test harness"});
+    }
+
+    auto raw = Get(path, headers);
+    if (!raw) {
+      return std::unexpected(
+          alpaca::APIError{alpaca::ErrorCode::Transport, raw->body});
+    }
+
+    if (!alpaca::utils::IsSuccess(raw->status)) {
+      return std::unexpected(alpaca::APIError{alpaca::ErrorCode::HTTPCode,
+                                              raw->body, raw->status});
+    }
+
+    T obj{};
+    auto err = glz::read_json(obj, raw->body);
+    if (err) {
+      return std::unexpected(alpaca::APIError{
+          alpaca::ErrorCode::JSONParsing, glz::format_error(err, raw->body)});
+    }
+
+    return obj;
   }
 };
 
@@ -162,7 +198,7 @@ TEST_CASE("MarketDataClient.GetBars: repeated next_page_token triggers "
 
   auto res = cli.GetBars(p);
   REQUIRE_FALSE(res.has_value());
-  REQUIRE(res.error() == "Pagination error: next_page_token repeated");
+  REQUIRE(res.error().message == "Pagination error: next_page_token repeated");
 }
 
 TEST_CASE("MarketDataClient.GetBars: input validation errors") {
@@ -176,7 +212,7 @@ TEST_CASE("MarketDataClient.GetBars: input validation errors") {
     p.symbols = {};
     auto res = cli.GetBars(p);
     REQUIRE_FALSE(res.has_value());
-    REQUIRE(res.error() == "Empty symbol");
+    REQUIRE(res.error().message == "Empty symbol");
   }
 
   SECTION("empty timeframe") {
@@ -185,7 +221,7 @@ TEST_CASE("MarketDataClient.GetBars: input validation errors") {
     p.timeframe = "";
     auto res = cli.GetBars(p);
     REQUIRE_FALSE(res.has_value());
-    REQUIRE(res.error() == "Empty timeframe");
+    REQUIRE(res.error().message == "Empty timeframe");
   }
 
   SECTION("limit <= 0") {
@@ -194,7 +230,7 @@ TEST_CASE("MarketDataClient.GetBars: input validation errors") {
     p.limit = 0;
     auto res = cli.GetBars(p);
     REQUIRE_FALSE(res.has_value());
-    REQUIRE(res.error() == "Empty limit");
+    REQUIRE(res.error().message == "Empty limit");
   }
 }
 
@@ -221,7 +257,10 @@ TEST_CASE("MarketDataClient.GetBars: HTTP non-2xx returns HTTP error") {
 
   auto res = cli.GetBars(p);
   REQUIRE_FALSE(res.has_value());
-  REQUIRE_THAT(res.error(), Catch::Matchers::ContainsSubstring("HTTP 429"));
+  REQUIRE(res.error().code == alpaca::ErrorCode::HTTPCode);
+  REQUIRE(res.error().status.value() == 429);
+  REQUIRE_THAT(res.error().message,
+               Catch::Matchers::ContainsSubstring("rate_limited"));
 }
 
 TEST_CASE(
@@ -249,7 +288,7 @@ TEST_CASE(
 
   auto res = cli.GetBars(p);
   REQUIRE_FALSE(res.has_value());
-  REQUIRE_THAT(res.error(), Catch::Matchers::ContainsSubstring("Error Code:"));
+  REQUIRE(res.error().code == alpaca::ErrorCode::JSONParsing);
 }
 
 TEST_CASE("MarketDataClient.GetLatestBar: success parses LatestBars and query "
@@ -290,5 +329,5 @@ TEST_CASE("MarketDataClient.GetLatestBar: empty symbols returns error") {
 
   auto res = cli.GetLatestBar(p);
   REQUIRE_FALSE(res.has_value());
-  REQUIRE(res.error() == "Error: Empty symbol");
+  REQUIRE(res.error().message == "Empty symbol");
 }

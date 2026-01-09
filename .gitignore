@@ -1,4 +1,5 @@
 .env
+.clangd
 .cache/
 build/
 .vscode/
