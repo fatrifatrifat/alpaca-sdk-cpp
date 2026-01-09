@@ -4,7 +4,6 @@
 #include <alpaca/models/trading/serialize.hpp>
 #include <alpaca/utils/utils.hpp>
 #include <expected>
-#include <print>
 
 namespace alpaca {
 
@@ -37,134 +36,55 @@ public:
 
   TradingClientT(const Env &env, Http cli) : env_(env), cli_(std::move(cli)) {}
 
-  std::expected<Account, std::string> GetAccount() {
-    auto resp = cli_.Get(ACCOUNT_ENDPOINT, env_.GetAuthHeaders());
-    if (!resp) {
-      return std::unexpected(std::format("Error: {}", resp.error()));
-    }
-
-    if (!utils::IsSuccess(resp->status)) {
-      return std::unexpected(
-          std::format("HTTP {}: {}", resp->status, resp->body));
-    }
-
-    Account account;
-    auto error = glz::read_json(account, resp->body);
-    if (error) {
-      return std::unexpected(
-          std::format("Error: {}", glz::format_error(error, resp->body)));
-    }
-
-    return account;
+  std::expected<Account, APIError> GetAccount() {
+    const auto &query = ACCOUNT_ENDPOINT;
+    return cli_.template Request<Account>(Req::GET, query,
+                                          env_.GetAuthHeaders());
   }
 
-  std::expected<OrderResponse, std::string>
+  std::expected<OrderResponse, APIError>
   SubmitOrder(const OrderRequest &request) {
     std::string json;
     auto order_request = glz::write_json(request);
     if (!order_request) {
-      return std::unexpected(
-          std::format("Error: {}", glz::format_error(order_request.error())));
+      return std::unexpected(APIError{
+          ErrorCode::JSONParsing, glz::format_error(order_request.error())});
     }
 
-    auto resp = cli_.Post(ORDERS_ENDPOINT, env_.GetAuthHeaders(),
-                          order_request.value(), "application/json");
-
-    if (!resp) {
-      return std::unexpected(std::format("Error: {}", resp.error()));
-    }
-
-    if (!utils::IsSuccess(resp->status)) {
-      return std::unexpected(
-          std::format("HTTP {}: {}", resp->status, resp->body));
-    }
-
-    OrderResponse response;
-    auto error = glz::read_json(response, resp->body);
-    if (error) {
-      return std::unexpected(
-          std::format("Error: {}", glz::format_error(error, resp->body)));
-    }
-
-    return response;
+    const auto &query = ORDERS_ENDPOINT;
+    return cli_.template Request<OrderResponse>(
+        Req::POST, query, env_.GetAuthHeaders(), order_request.value(),
+        "application/json");
   }
 
-  std::expected<Positions, std::string> GetAllOpenPositions() {
-    auto resp = cli_.Get(POSITIONS_ENDPOINT, env_.GetAuthHeaders());
-    if (!resp) {
-      return std::unexpected(std::format("Error: {}", resp.error()));
-    }
-
-    if (!utils::IsSuccess(resp->status)) {
-      return std::unexpected(
-          std::format("HTTP {}: {}", resp->status, resp->body));
-    }
-
-    Positions positions;
-    auto error = glz::read_json(positions, resp->body);
-    if (error) {
-      return std::unexpected(
-          std::format("Error: {}", glz::format_error(error, resp->body)));
-    }
-    std::println("Positions body: {}", resp->body);
-
-    return positions;
+  std::expected<Positions, APIError> GetAllOpenPositions() {
+    const auto &query = POSITIONS_ENDPOINT;
+    return cli_.template Request<Positions>(Req::GET, query,
+                                            env_.GetAuthHeaders());
   }
 
-  std::expected<Position, std::string>
-  GetOpenPosition(const std::string &symbol) {
-    auto resp = cli_.Get(std::format("{}/{}", POSITIONS_ENDPOINT, symbol),
-                         env_.GetAuthHeaders());
-    if (!resp) {
-      return std::unexpected(std::format("Error: {}", resp.error()));
-    }
-
-    if (!utils::IsSuccess(resp->status)) {
-      return std::unexpected(
-          std::format("HTTP {}: {}", resp->status, resp->body));
-    }
-
-    Position position;
-    auto error = glz::read_json(position, resp->body);
-    if (error) {
-      return std::unexpected(
-          std::format("Error: {}", glz::format_error(error, resp->body)));
-    }
-
-    return position;
+  std::expected<Position, APIError> GetOpenPosition(const std::string &symbol) {
+    const auto query = std::format("{}/{}", POSITIONS_ENDPOINT, symbol);
+    return cli_.template Request<Position>(Req::GET, query,
+                                           env_.GetAuthHeaders());
   }
 
-  std::expected<OrderResponse, std::string>
+  std::expected<OrderResponse, APIError>
   ClosePosition(const ClosePositionParams &cpp) {
     if (cpp.symbol_or_asset_id.empty()) {
-      return std::unexpected("Error: Unvalid empty symbol parameter");
+      return std::unexpected(APIError{ErrorCode::IllArgument,
+                                      "Error: Unvalid empty symbol parameter"});
     }
     const auto qty_query = BuildClosePositionQuery(cpp.amt);
     if (!qty_query) {
-      return std::unexpected("Error: Unvalid liquidation amount query");
+      return std::unexpected(APIError{
+          ErrorCode::IllArgument, "Error: Unvalid liquidation amount query"});
     }
 
-    auto resp =
-        cli_.Delete(std::format("{}/{}?{}", POSITIONS_ENDPOINT,
-                                cpp.symbol_or_asset_id, qty_query.value()),
-                    env_.GetAuthHeaders());
-    if (!resp) {
-      return std::unexpected(std::format("Error: {}", resp.error()));
-    }
-
-    if (!utils::IsSuccess(resp->status)) {
-      return std::unexpected(
-          std::format("HTTP {}: {}", resp->status, resp->body));
-    }
-
-    OrderResponse response;
-    auto error = glz::read_json(response, resp->body);
-    if (error) {
-      return std::unexpected(
-          std::format("Error: {}", glz::format_error(error, resp->body)));
-    }
-
-    return response;
+    const auto query = std::format("{}/{}?{}", POSITIONS_ENDPOINT,
+                                   cpp.symbol_or_asset_id, qty_query.value());
+    return cli_.template Request<OrderResponse>(Req::DELETE, query,
+                                                env_.GetAuthHeaders());
   }
 
 private:
