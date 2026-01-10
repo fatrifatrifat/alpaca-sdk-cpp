@@ -36,12 +36,13 @@ struct FakeHttpClient {
     Headers headers;
   };
 
+  Headers headers;
   std::vector<Call> calls;
 
   std::unordered_map<std::string, std::expected<Response, std::string>>
       getRoutes;
 
-  explicit FakeHttpClient(std::string = {}) {}
+  explicit FakeHttpClient(std::string url, Headers hdrs) : headers(hdrs) {}
 
   std::expected<Response, std::string> Get(std::string_view path,
                                            const Headers &h) {
@@ -56,7 +57,7 @@ struct FakeHttpClient {
 
   template <class T>
   std::expected<T, alpaca::APIError>
-  Request(alpaca::Req type, const std::string &path, const Headers &headers,
+  Request(alpaca::Req type, const std::string &path,
           std::optional<std::string> body = std::nullopt,
           std::optional<std::string> content_type = std::nullopt) {
     (void)body;
@@ -134,7 +135,7 @@ std::string latest_bars_json() {
 
 TEST_CASE("MarketDataClient.GetBars: builds query and merges paginated pages") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetDataUrl()};
+  FakeHttpClient http{env.GetDataUrl(), env.GetAuthHeaders()};
 
   const std::string page1 = "/v2/stocks/bars?"
                             "symbols=AAPL%2CMSFT&"
@@ -172,7 +173,7 @@ TEST_CASE("MarketDataClient.GetBars: builds query and merges paginated pages") {
 TEST_CASE("MarketDataClient.GetBars: repeated next_page_token triggers "
           "pagination guard") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetDataUrl()};
+  FakeHttpClient http{env.GetDataUrl(), env.GetAuthHeaders()};
 
   const std::string page1 = "/v2/stocks/bars?"
                             "symbols=AAPL&"
@@ -203,7 +204,7 @@ TEST_CASE("MarketDataClient.GetBars: repeated next_page_token triggers "
 
 TEST_CASE("MarketDataClient.GetBars: input validation errors") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetDataUrl()};
+  FakeHttpClient http{env.GetDataUrl(), env.GetAuthHeaders()};
   alpaca::MarketDataClientT<TestEnvironment, FakeHttpClient> cli(
       env, std::move(http));
 
@@ -236,7 +237,7 @@ TEST_CASE("MarketDataClient.GetBars: input validation errors") {
 
 TEST_CASE("MarketDataClient.GetBars: HTTP non-2xx returns HTTP error") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetDataUrl()};
+  FakeHttpClient http{env.GetDataUrl(), env.GetAuthHeaders()};
 
   const std::string page1 = "/v2/stocks/bars?"
                             "symbols=AAPL&"
@@ -266,7 +267,7 @@ TEST_CASE("MarketDataClient.GetBars: HTTP non-2xx returns HTTP error") {
 TEST_CASE(
     "MarketDataClient.GetBars: glaze parse error returns formatted error") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetDataUrl()};
+  FakeHttpClient http{env.GetDataUrl(), env.GetAuthHeaders()};
 
   const std::string page1 = "/v2/stocks/bars?"
                             "symbols=AAPL&"
@@ -294,7 +295,7 @@ TEST_CASE(
 TEST_CASE("MarketDataClient.GetLatestBar: success parses LatestBars and query "
           "contains feed when provided") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetDataUrl()};
+  FakeHttpClient http{env.GetDataUrl(), env.GetAuthHeaders()};
 
   const std::string path = "/v2/stocks/bars/latest?"
                            "symbols=AAPL%2CMSFT&"
@@ -320,7 +321,7 @@ TEST_CASE("MarketDataClient.GetLatestBar: success parses LatestBars and query "
 
 TEST_CASE("MarketDataClient.GetLatestBar: empty symbols returns error") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetDataUrl()};
+  FakeHttpClient http{env.GetDataUrl(), env.GetAuthHeaders()};
   alpaca::MarketDataClientT<TestEnvironment, FakeHttpClient> cli(
       env, std::move(http));
 

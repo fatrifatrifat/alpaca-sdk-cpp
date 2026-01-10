@@ -37,6 +37,7 @@ struct FakeHttpClient {
     std::string contentType;
   };
 
+  Headers headers;
   std::vector<Call> calls;
 
   std::function<std::expected<Response, std::string>(std::string_view,
@@ -49,7 +50,7 @@ struct FakeHttpClient {
                                                      const Headers &)>
       onDelete;
 
-  explicit FakeHttpClient(std::string = {}) {}
+  explicit FakeHttpClient(std::string url, Headers hdrs) : headers(hdrs) {}
 
   std::expected<Response, std::string> Get(std::string_view path,
                                            const Headers &h) {
@@ -80,7 +81,7 @@ struct FakeHttpClient {
 
   template <class T>
   std::expected<T, alpaca::APIError>
-  Request(alpaca::Req type, const std::string &path, const Headers &headers,
+  Request(alpaca::Req type, const std::string &path,
           std::optional<std::string> body = std::nullopt,
           std::optional<std::string> content_type = std::nullopt) {
     std::expected<Response, std::string> raw = std::unexpected("uninitialized");
@@ -195,7 +196,7 @@ std::string positions_json_one() {
 
 TEST_CASE("TradingClient.GetAccountReq: success parses Account via glaze") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetBaseUrl()};
+  FakeHttpClient http{env.GetBaseUrl(), env.GetAuthHeaders()};
 
   http.onGet = [&](std::string_view path, const TestEnvironment::Headers &) {
     REQUIRE(path == "/v2/account");
@@ -214,7 +215,7 @@ TEST_CASE("TradingClient.GetAccountReq: success parses Account via glaze") {
 
 TEST_CASE("TradingClient.GetAccount: non-2xx returns HTTP error") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetBaseUrl()};
+  FakeHttpClient http{env.GetBaseUrl(), env.GetAuthHeaders()};
 
   http.onGet = [&](std::string_view, const TestEnvironment::Headers &) {
     return FakeHttpClient::Response{401, "nope"};
@@ -233,7 +234,7 @@ TEST_CASE("TradingClient.GetAccount: non-2xx returns HTTP error") {
 TEST_CASE("TradingClient.SubmitOrder: sends wire JSON (qty/notional), not "
           "internal fields") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetBaseUrl()};
+  FakeHttpClient http{env.GetBaseUrl(), env.GetAuthHeaders()};
 
   http.onPost = [&](std::string_view path, const TestEnvironment::Headers &,
                     std::string_view body, std::string_view contentType) {
@@ -266,7 +267,7 @@ TEST_CASE("TradingClient.SubmitOrder: sends wire JSON (qty/notional), not "
 TEST_CASE(
     "TradingClient.GetAllOpenPositions: success parses Positions via glaze") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetBaseUrl()};
+  FakeHttpClient http{env.GetBaseUrl(), env.GetAuthHeaders()};
 
   http.onGet = [&](std::string_view path, const TestEnvironment::Headers &) {
     REQUIRE(path == "/v2/positions");
@@ -286,7 +287,7 @@ TEST_CASE(
 TEST_CASE("TradingClient.GetOpenPosition: hits /v2/positions/{symbol} and "
           "parses Position") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetBaseUrl()};
+  FakeHttpClient http{env.GetBaseUrl(), env.GetAuthHeaders()};
 
   http.onGet = [&](std::string_view path, const TestEnvironment::Headers &) {
     REQUIRE(path == "/v2/positions/AAPL");
@@ -307,7 +308,7 @@ TEST_CASE("TradingClient.GetOpenPosition: hits /v2/positions/{symbol} and "
 TEST_CASE(
     "TradingClient.ClosePosition: builds qty/percentage query correctly") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetBaseUrl()};
+  FakeHttpClient http{env.GetBaseUrl(), env.GetAuthHeaders()};
 
   http.onDelete = [&](std::string_view path, const TestEnvironment::Headers &) {
     return FakeHttpClient::Response{200, order_response_json_minimal()};
@@ -318,7 +319,7 @@ TEST_CASE(
 
   SECTION("Shares -> qty=... with 9 decimals") {
     TestEnvironment env2{};
-    FakeHttpClient http2{env2.GetBaseUrl()};
+    FakeHttpClient http2{env2.GetBaseUrl(), env2.GetAuthHeaders()};
 
     http2.onDelete = [&](std::string_view path,
                          const TestEnvironment::Headers &) {
@@ -340,7 +341,7 @@ TEST_CASE(
 
   SECTION("Percent -> percentage=... with 9 decimals") {
     TestEnvironment env2{};
-    FakeHttpClient http2{env2.GetBaseUrl()};
+    FakeHttpClient http2{env2.GetBaseUrl(), env2.GetAuthHeaders()};
 
     http2.onDelete = [&](std::string_view path,
                          const TestEnvironment::Headers &) {
