@@ -1,7 +1,9 @@
 #pragma once
+#include <alpaca/models/trading/account.hpp>
+#include <alpaca/models/trading/calendar.hpp>
+#include <alpaca/models/trading/clock.hpp>
 #include <alpaca/models/trading/order.hpp>
 #include <alpaca/models/trading/position.hpp>
-#include <alpaca/models/trading/account.hpp>
 #include <glaze/glaze.hpp>
 
 namespace glz {
@@ -177,6 +179,27 @@ template <> struct meta<alpaca::Account> {
       "crypto_tier", &T::crypto_tier, "intraday_adjustments",
       &T::intraday_adjustments, "pending_reg_taf_fees",
       &T::pending_reg_taf_fees);
+};
+
+template <> struct meta<alpaca::Clock> {
+  using T = alpaca::Clock;
+  static constexpr auto value =
+      object("timestamp", &T::timestamp, "is_open", &T::isOpen, "next_open",
+             &T::nextOpen, "next_close", &T::nextClose);
+};
+
+template <> struct meta<alpaca::CalendarRequest> {
+  using T = alpaca::CalendarRequest;
+  static constexpr auto value =
+      object("start", &T::start, "end", &T::end, "date_type", &T::dateType);
+};
+
+template <> struct meta<alpaca::Calendar> {
+  using T = alpaca::Calendar;
+  static constexpr auto value =
+      object("close", &T::close, "data", &T::date, "open", &T::open,
+             "session_close", &T::session_close, "session_open",
+             &T::session_open, "settlement_data", &T::settlementData);
 };
 
 }; // namespace glz

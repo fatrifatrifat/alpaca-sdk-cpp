@@ -68,18 +68,28 @@ public:
   std::expected<OrderResponse, APIError>
   ClosePosition(const ClosePositionParams &cpp) {
     if (cpp.symbol_or_asset_id.empty()) {
-      return std::unexpected(APIError{ErrorCode::IllArgument,
-                                      "Error: Unvalid empty symbol parameter"});
+      return std::unexpected(
+          APIError{ErrorCode::IllArgument, "Unvalid empty symbol parameter"});
     }
     const auto qty_query = BuildClosePositionQuery(cpp.amt);
     if (!qty_query) {
-      return std::unexpected(APIError{
-          ErrorCode::IllArgument, "Error: Unvalid liquidation amount query"});
+      return std::unexpected(
+          APIError{ErrorCode::IllArgument, "Unvalid liquidation amount query"});
     }
 
     const auto query = std::format("{}/{}?{}", POSITIONS_ENDPOINT,
                                    cpp.symbol_or_asset_id, qty_query.value());
     return cli_.template Request<OrderResponse>(Req::DELETE, query);
+  }
+
+  std::expected<Clock, APIError> GetMarketClockInfo() {
+    const auto &query = CLOCK_ENDPOINT;
+    return cli_.template Request<Clock>(Req::GET, query);
+  }
+
+  std::expected<CalendarResponse, APIError> GetMarketCalendarInfo() {
+    const auto &query = CALENDAR_ENDPOINT;
+    return cli_.template Request<CalendarResponse>(Req::GET, query);
   }
 
 private:
@@ -89,6 +99,8 @@ private:
   static constexpr const char *ACCOUNT_ENDPOINT = "/v2/account";
   static constexpr const char *ORDERS_ENDPOINT = "/v2/orders";
   static constexpr const char *POSITIONS_ENDPOINT = "/v2/positions";
+  static constexpr const char *CLOCK_ENDPOINT = "/v2/clock";
+  static constexpr const char *CALENDAR_ENDPOINT = "/v2/calendar";
 };
 
 using TradingClient = TradingClientT<Environment, HttpClient>;
