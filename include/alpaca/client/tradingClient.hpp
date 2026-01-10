@@ -32,14 +32,13 @@ private:
 
 public:
   explicit TradingClientT(const Env &env)
-      : env_(env), cli_(env_.GetBaseUrl()) {}
+      : env_(env), cli_(env_.GetBaseUrl(), env_.GetAuthHeaders()) {}
 
   TradingClientT(const Env &env, Http cli) : env_(env), cli_(std::move(cli)) {}
 
   std::expected<Account, APIError> GetAccount() {
     const auto &query = ACCOUNT_ENDPOINT;
-    return cli_.template Request<Account>(Req::GET, query,
-                                          env_.GetAuthHeaders());
+    return cli_.template Request<Account>(Req::GET, query);
   }
 
   std::expected<OrderResponse, APIError>
@@ -53,20 +52,17 @@ public:
 
     const auto &query = ORDERS_ENDPOINT;
     return cli_.template Request<OrderResponse>(
-        Req::POST, query, env_.GetAuthHeaders(), order_request.value(),
-        "application/json");
+        Req::POST, query, order_request.value(), "application/json");
   }
 
   std::expected<Positions, APIError> GetAllOpenPositions() {
     const auto &query = POSITIONS_ENDPOINT;
-    return cli_.template Request<Positions>(Req::GET, query,
-                                            env_.GetAuthHeaders());
+    return cli_.template Request<Positions>(Req::GET, query);
   }
 
   std::expected<Position, APIError> GetOpenPosition(const std::string &symbol) {
     const auto query = std::format("{}/{}", POSITIONS_ENDPOINT, symbol);
-    return cli_.template Request<Position>(Req::GET, query,
-                                           env_.GetAuthHeaders());
+    return cli_.template Request<Position>(Req::GET, query);
   }
 
   std::expected<OrderResponse, APIError>
@@ -83,8 +79,7 @@ public:
 
     const auto query = std::format("{}/{}?{}", POSITIONS_ENDPOINT,
                                    cpp.symbol_or_asset_id, qty_query.value());
-    return cli_.template Request<OrderResponse>(Req::DELETE, query,
-                                                env_.GetAuthHeaders());
+    return cli_.template Request<OrderResponse>(Req::DELETE, query);
   }
 
 private:

@@ -48,12 +48,12 @@ private:
     qb.add("sort", sort);
 
     const auto query = BARS_ENDPOINT + qb.q;
-    return cli_.template Request<Bars>(Req::GET, query, env_.GetAuthHeaders());
+    return cli_.template Request<Bars>(Req::GET, query);
   }
 
 public:
   explicit MarketDataClientT(const Env &env)
-      : env_(env), cli_(env_.GetDataUrl()) {}
+      : env_(env), cli_(env_.GetDataUrl(), env_.GetAuthHeaders()) {}
 
   MarketDataClientT(const Env &env, Http cli)
       : env_(env), cli_(std::move(cli)) {}
@@ -104,8 +104,7 @@ public:
     qb.add("feed", feed);
 
     const auto query = LATEST_BARS_ENDPOINT + qb.q;
-    return cli_.template Request<LatestBars>(Req::GET, query,
-                                             env_.GetAuthHeaders());
+    return cli_.template Request<LatestBars>(Req::GET, query);
   }
 
 private:

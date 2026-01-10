@@ -1,4 +1,5 @@
 #pragma once
+#include <alpaca/client/environment.hpp>
 #include <alpaca/utils/utils.hpp>
 #include <expected>
 #include <glaze/glaze.hpp>
@@ -72,11 +73,12 @@ private:
   }
 
 public:
-  explicit HttpClient(const std::string &host) : cli_(host) {}
+  explicit HttpClient(const std::string &host, const httplib::Headers &headers)
+      : cli_(host), headers_(headers) {}
 
   template <typename T>
   std::expected<T, APIError>
-  Request(Req type, const std::string &path, const httplib::Headers &headers,
+  Request(Req type, const std::string &path,
           std::optional<std::string> body = std::nullopt,
           std::optional<std::string> content_type = std::nullopt) {
     if (!cli_.is_valid()) {
@@ -88,7 +90,7 @@ public:
     httplib::Result resp;
     switch (type) {
     case Req::GET:
-      resp = cli_.Get(path, headers);
+      resp = cli_.Get(path, headers_);
       break;
     case Req::POST:
       if (!body || !content_type) {
@@ -96,10 +98,10 @@ public:
             alpaca::APIError{alpaca::ErrorCode::IllArgument,
                              "POST requires body and content_type"});
       }
-      resp = cli_.Post(path, headers, *body, *content_type);
+      resp = cli_.Post(path, headers_, *body, *content_type);
       break;
     case Req::DELETE:
-      resp = cli_.Delete(path, headers);
+      resp = cli_.Delete(path, headers_);
       break;
     }
 
@@ -125,6 +127,7 @@ public:
   }
 
 private:
+  const httplib::Headers headers_;
   httplib::SSLClient cli_;
 };
 
