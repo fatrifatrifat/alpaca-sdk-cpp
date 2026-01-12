@@ -1,7 +1,6 @@
 #pragma once
 #include <alpaca/alpaca.hpp>
 #include <optional>
-#include <print>
 #include <vector>
 
 using namespace std::chrono;
@@ -106,7 +105,7 @@ struct SymState {
   bool in_position{false};
 };
 
-/*inline int run(const std::vector<std::string> &symbols) {
+inline int run(const std::vector<std::string> &symbols) {
   if (symbols.empty()) {
     LOG_MSG(LOG_LEVEL_ERROR, "Wrong arguments. Intended arguments <symbols>");
     return 1;
@@ -131,10 +130,11 @@ struct SymState {
   const std::string warm_end = au::ToIsoz(warm_end_s);
   LOG_MSG(LOG_LEVEL_DEBUG, "Start: {}, End: {}", warm_start, warm_end);
 
-  auto warm_resp =
-      market.GetBars({symbols, timeframe, warm_start, warm_end, WARMUP_BARS});
+  auto warm_resp = market.GetBars(
+      {symbols, timeframe, warm_start, warm_end, WARMUP_BARS, BarFeed::IEX});
   if (!warm_resp) {
-    LOG_MSG(LOG_LEVEL_ERROR, "Couldn't get warmup bars. {}", warm_resp.error());
+    LOG_MSG(LOG_LEVEL_ERROR, "Couldn't get warmup bars. {}",
+            warm_resp.error().message);
     return 1;
   }
 
@@ -202,10 +202,10 @@ struct SymState {
 
     int limit = static_cast<int>(symbols.size()) * LIVE_FETCH_BARS * 2;
 
-    auto resp = market.GetBars(
-        {symbols, timeframe, au::ToIsoz(start_tp), au::ToIsoz(end_tp), limit});
+    auto resp = market.GetBars({symbols, timeframe, au::ToIsoz(start_tp),
+                                au::ToIsoz(end_tp), limit, BarFeed::IEX});
     if (!resp) {
-      LOG_MSG(LOG_LEVEL_INFO, "Live GetBars failed: {}", resp.error());
+      LOG_MSG(LOG_LEVEL_INFO, "Live GetBars failed: {}", resp.error().message);
       continue;
     }
 
@@ -241,16 +241,17 @@ struct SymState {
         }
 
         if (m.crossedAbove && !state.in_position) {
-          long long qty =
-              static_cast<long long>(std::floor(buy_power / bar.close));
+          long double qty =
+              static_cast<long double>(std::floor(buy_power / bar.close));
           if (qty > 0) {
-            auto o = trade.SubmitOrder({s, std::to_string(qty), "buy"});
+            auto o = trade.SubmitOrder({s, Quantity{qty}, OrderSide::buy});
             if (o) {
               state.in_position = true;
               LOG_MSG(LOG_LEVEL_INFO, "[{}], BUY qty={} @ close={} ts={}", s,
                       qty, bar.close, bar.timestamp);
             } else {
-              LOG_MSG(LOG_LEVEL_INFO, "[{}], BUY failed: {}", s, o.error());
+              LOG_MSG(LOG_LEVEL_INFO, "[{}], BUY failed: {}", s,
+                      o.error().message);
             }
           }
         }
@@ -263,7 +264,8 @@ struct SymState {
                     "[{}] SELL (close position) @ close={} ts={}", s, bar.close,
                     bar.timestamp);
           } else {
-            LOG_MSG(LOG_LEVEL_INFO, "[{}] SELL failed: {}", s, c.error());
+            LOG_MSG(LOG_LEVEL_INFO, "[{}] SELL failed: {}", s,
+                    c.error().message);
           }
         }
       }
@@ -271,6 +273,6 @@ struct SymState {
   }
 
   return 0;
-}*/
+}
 
 }; // namespace alpaca::macd

@@ -5,6 +5,7 @@
 #include <glaze/glaze.hpp>
 #include <httplib.h>
 #include <optional>
+#include <print>
 #include <string>
 
 namespace alpaca {

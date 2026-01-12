@@ -8,6 +8,8 @@ int main(int argc, char **argv) {
   auto market = MarketDataClient(env);
   auto trade = TradingClient(env);
 
+  // macd::run({"AAPL"});
+
   auto resp = trade.GetMarketCalendarInfo();
   if (!resp) {
     std::println("{}, {}, {}", static_cast<int>(resp.error().code),
@@ -15,7 +17,10 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  for (const auto &r : *resp) {
-    std::println("{}, {}, {}, {}", r.date, r.open, r.close, r.settlementData);
-  }
+  const auto &r = resp.value();
+  std::println("{}, {}, {}, {}", r.front().date, r.front().open,
+               r.front().close, r.front().settlementDate);
+
+  std::println("{}, {}, {}, {}", r.back().date, r.back().open, r.back().close,
+               r.back().settlementDate);
 }

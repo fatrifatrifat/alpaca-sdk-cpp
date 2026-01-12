@@ -197,9 +197,9 @@ template <> struct meta<alpaca::CalendarRequest> {
 template <> struct meta<alpaca::Calendar> {
   using T = alpaca::Calendar;
   static constexpr auto value =
-      object("close", &T::close, "data", &T::date, "open", &T::open,
+      object("close", &T::close, "date", &T::date, "open", &T::open,
              "session_close", &T::session_close, "session_open",
-             &T::session_open, "settlement_data", &T::settlementData);
+             &T::session_open, "settlement_date", &T::settlementDate);
 };
 
 }; // namespace glz

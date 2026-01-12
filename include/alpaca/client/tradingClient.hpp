@@ -4,6 +4,7 @@
 #include <alpaca/models/trading/serialize.hpp>
 #include <alpaca/utils/utils.hpp>
 #include <expected>
+#include <print>
 
 namespace alpaca {
 
@@ -87,8 +88,13 @@ public:
     return cli_.template Request<Clock>(Req::GET, query);
   }
 
-  std::expected<CalendarResponse, APIError> GetMarketCalendarInfo() {
-    const auto &query = CALENDAR_ENDPOINT;
+  std::expected<CalendarResponse, APIError>
+  GetMarketCalendarInfo(const CalendarRequest &c = {}) {
+    utils::QueryBuilder qb;
+    qb.add("start", c.start);
+    qb.add("end", c.end);
+    qb.add("date_type", c.dateType);
+    const auto &query = std::format("{}?{}", CALENDAR_ENDPOINT, qb.q);
     return cli_.template Request<CalendarResponse>(Req::GET, query);
   }
 
