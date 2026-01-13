@@ -13,6 +13,9 @@ enum class PositionIntent {
   sell_to_close
 };
 enum class OrderClass { simple, bracket, oco, oto, mleg, crypto };
+enum class OrderStatus { open, closed, all };
+enum class OrderDirection { asc, desc };
+enum class OrderAssetClass { us_equity, us_option, crypto, all };
 
 struct Leg {
   std::string symbol;
@@ -244,5 +247,68 @@ struct OrderResponse {
   std::optional<std::string> subtag;
   std::optional<std::string> source;
 };
+
+struct OrderListParam {
+  std::optional<OrderStatus> status;
+  std::optional<uint32_t> limit;
+  std::optional<std::string> after;
+  std::optional<std::string> until;
+  std::optional<OrderDirection> direction;
+  std::optional<bool> nested;
+  std::optional<std::vector<std::string>> symbols;
+  std::optional<OrderSide> side;
+  std::optional<std::vector<OrderAssetClass>> assetClass;
+  std::optional<std::string> beforeOrderID;
+  std::optional<std::string> afterOrderID;
+};
+
+constexpr std::optional<std::string_view> ToString(OrderStatus d) {
+  switch (d) {
+  case OrderStatus::all:
+    return "all";
+  case OrderStatus::closed:
+    return "closed";
+  case OrderStatus::open:
+    return "open";
+  default:
+    return std::nullopt;
+  }
+}
+
+constexpr std::optional<std::string_view> ToString(OrderDirection d) {
+  switch (d) {
+  case OrderDirection::asc:
+    return "asc";
+  case OrderDirection::desc:
+    return "desc";
+  default:
+    return std::nullopt;
+  }
+}
+
+constexpr std::optional<std::string_view> ToString(OrderSide d) {
+  switch (d) {
+  case OrderSide::buy:
+    return "buy";
+  case OrderSide::sell:
+    return "sell";
+  default:
+    return std::nullopt;
+  }
+}
+constexpr std::optional<std::string_view> ToString(OrderAssetClass d) {
+  switch (d) {
+  case OrderAssetClass::us_equity:
+    return "us_equity";
+  case OrderAssetClass::us_option:
+    return "us_option";
+  case OrderAssetClass::crypto:
+    return "crypto";
+  case OrderAssetClass::all:
+    return "all";
+  default:
+    return std::nullopt;
+  }
+}
 
 }; // namespace alpaca

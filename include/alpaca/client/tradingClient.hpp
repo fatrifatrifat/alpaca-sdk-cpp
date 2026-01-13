@@ -4,7 +4,6 @@
 #include <alpaca/models/trading/serialize.hpp>
 #include <alpaca/utils/utils.hpp>
 #include <expected>
-#include <print>
 
 namespace alpaca {
 
@@ -96,6 +95,40 @@ public:
     qb.add("date_type", c.dateType);
     const auto &query = std::format("{}?{}", CALENDAR_ENDPOINT, qb.q);
     return cli_.template Request<CalendarResponse>(Req::GET, query);
+  }
+
+  std::expected<std::vector<OrderResponse>, APIError>
+  GetAllOrders(const OrderListParam &o = {}) {
+    auto status = o.status ? ToString(*o.status) : std::nullopt;
+    auto limit =
+        o.limit ? std::make_optional(std::to_string(*o.limit)) : std::nullopt;
+    auto direction = o.direction ? ToString(*o.direction) : std::nullopt;
+    auto nested = o.nested ? std::make_optional(*o.nested ? "true" : "false")
+                           : std::nullopt;
+    auto symbols = o.symbols
+                       ? std::make_optional(utils::SymbolsEncode(*o.symbols))
+                       : std::nullopt;
+    auto side = o.side ? ToString(*o.side) : std::nullopt;
+
+    utils::QueryBuilder qb;
+    qb.add("status", status);
+    qb.add("limit", limit);
+    qb.add("after", o.after);
+    qb.add("until", o.until);
+    qb.add("direction", direction);
+    qb.add("nested", nested);
+    qb.add("symbols", symbols);
+    qb.add("side", side);
+    if (o.assetClass) {
+      for (const auto &a : *o.assetClass) {
+        qb.add("asset_class", ToString(a));
+      }
+    }
+    qb.add("before_order_id", o.beforeOrderID);
+    qb.add("after_order_id", o.afterOrderID);
+    const auto query = std::format("{}?{}", ORDERS_ENDPOINT, qb.q);
+    std::println("Query: {}", query);
+    return cli_.template Request<std::vector<OrderResponse>>(Req::GET, query);
   }
 
 private:
