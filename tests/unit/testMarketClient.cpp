@@ -1,4 +1,4 @@
-#include <alpaca/alpaca.hpp>
+#include <alpaca/client/marketDataClient.hpp>
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
