@@ -1,12 +1,9 @@
 #pragma once
 #include <alpaca/client/environment.hpp>
 #include <alpaca/client/httpClient.hpp>
-#include <alpaca/models/accounts/serialize.hpp>
-#include <alpaca/models/orders/serialize.hpp>
-#include <alpaca/models/positions/serialize.hpp>
+#include <alpaca/models/trading/serialize.hpp>
 #include <alpaca/utils/utils.hpp>
 #include <expected>
-#include <print>
 
 namespace alpaca {
 
@@ -35,138 +32,128 @@ private:
 
 public:
   explicit TradingClientT(const Env &env)
-      : env_(env), cli_(env_.GetBaseUrl()) {}
+      : env_(env), cli_(env_.GetBaseUrl(), env_.GetAuthHeaders()) {}
 
   TradingClientT(const Env &env, Http cli) : env_(env), cli_(std::move(cli)) {}
 
-  std::expected<Account, std::string> GetAccount() {
-    auto resp = cli_.Get(ACCOUNT_ENDPOINT, env_.GetAuthHeaders());
-    if (!resp) {
-      return std::unexpected(std::format("Error: {}", resp.error()));
-    }
-
-    if (!utils::IsSuccess(resp->status)) {
-      return std::unexpected(
-          std::format("HTTP {}: {}", resp->status, resp->body));
-    }
-
-    Account account;
-    auto error = glz::read_json(account, resp->body);
-    if (error) {
-      return std::unexpected(
-          std::format("Error: {}", glz::format_error(error, resp->body)));
-    }
-
-    return account;
+  std::expected<Account, APIError> GetAccount() {
+    const auto &query = ACCOUNT_ENDPOINT;
+    return cli_.template Request<Account>(Req::GET, query);
   }
 
-  std::expected<OrderResponse, std::string>
+  std::expected<OrderResponse, APIError>
   SubmitOrder(const OrderRequest &request) {
     std::string json;
     auto order_request = glz::write_json(request);
     if (!order_request) {
-      return std::unexpected(
-          std::format("Error: {}", glz::format_error(order_request.error())));
+      return std::unexpected(APIError{
+          ErrorCode::JSONParsing, glz::format_error(order_request.error())});
     }
 
-    auto resp = cli_.Post(ORDERS_ENDPOINT, env_.GetAuthHeaders(),
-                          order_request.value(), "application/json");
-
-    if (!resp) {
-      return std::unexpected(std::format("Error: {}", resp.error()));
-    }
-
-    if (!utils::IsSuccess(resp->status)) {
-      return std::unexpected(
-          std::format("HTTP {}: {}", resp->status, resp->body));
-    }
-
-    OrderResponse response;
-    auto error = glz::read_json(response, resp->body);
-    if (error) {
-      return std::unexpected(
-          std::format("Error: {}", glz::format_error(error, resp->body)));
-    }
-
-    return response;
+    const auto &query = ORDERS_ENDPOINT;
+    return cli_.template Request<OrderResponse>(
+        Req::POST, query, order_request.value(), "application/json");
   }
 
-  std::expected<Positions, std::string> GetAllOpenPositions() {
-    auto resp = cli_.Get(POSITIONS_ENDPOINT, env_.GetAuthHeaders());
-    if (!resp) {
-      return std::unexpected(std::format("Error: {}", resp.error()));
-    }
-
-    if (!utils::IsSuccess(resp->status)) {
-      return std::unexpected(
-          std::format("HTTP {}: {}", resp->status, resp->body));
-    }
-
-    Positions positions;
-    auto error = glz::read_json(positions, resp->body);
-    if (error) {
-      return std::unexpected(
-          std::format("Error: {}", glz::format_error(error, resp->body)));
-    }
-    std::println("Positions body: {}", resp->body);
-
-    return positions;
+  std::expected<Positions, APIError> GetAllOpenPositions() {
+    const auto &query = POSITIONS_ENDPOINT;
+    return cli_.template Request<Positions>(Req::GET, query);
   }
 
-  std::expected<Position, std::string>
-  GetOpenPosition(const std::string &symbol) {
-    auto resp = cli_.Get(std::format("{}/{}", POSITIONS_ENDPOINT, symbol),
-                         env_.GetAuthHeaders());
-    if (!resp) {
-      return std::unexpected(std::format("Error: {}", resp.error()));
-    }
-
-    if (!utils::IsSuccess(resp->status)) {
-      return std::unexpected(
-          std::format("HTTP {}: {}", resp->status, resp->body));
-    }
-
-    Position position;
-    auto error = glz::read_json(position, resp->body);
-    if (error) {
-      return std::unexpected(
-          std::format("Error: {}", glz::format_error(error, resp->body)));
-    }
-
-    return position;
+  std::expected<Position, APIError> GetOpenPosition(const std::string &symbol) {
+    const auto query = std::format("{}/{}", POSITIONS_ENDPOINT, symbol);
+    return cli_.template Request<Position>(Req::GET, query);
   }
 
-  std::expected<OrderResponse, std::string>
+  std::expected<OrderResponse, APIError>
   ClosePosition(const ClosePositionParams &cpp) {
     if (cpp.symbol_or_asset_id.empty()) {
-      return std::unexpected("Error: Unvalid empty symbol parameter");
+      return std::unexpected(
+          APIError{ErrorCode::IllArgument, "Unvalid empty symbol parameter"});
     }
     const auto qty_query = BuildClosePositionQuery(cpp.amt);
     if (!qty_query) {
-      return std::unexpected("Error: Unvalid liquidation amount query");
-    }
-
-    auto resp =
-        cli_.Delete(std::format("{}/{}?{}", POSITIONS_ENDPOINT,
-                                cpp.symbol_or_asset_id, qty_query.value()),
-                    env_.GetAuthHeaders());
-    if (!resp) {
-      return std::unexpected(std::format("Error: {}", resp.error()));
-    }
-
-    if (!utils::IsSuccess(resp->status)) {
       return std::unexpected(
-          std::format("HTTP {}: {}", resp->status, resp->body));
+          APIError{ErrorCode::IllArgument, "Unvalid liquidation amount query"});
     }
 
-    OrderResponse response;
-    auto error = glz::read_json(response, resp->body);
-    if (error) {
-      return std::unexpected(
-          std::format("Error: {}", glz::format_error(error, resp->body)));
-    }
+    const auto query = std::format("{}/{}?{}", POSITIONS_ENDPOINT,
+                                   cpp.symbol_or_asset_id, qty_query.value());
+    return cli_.template Request<OrderResponse>(Req::DELETE, query);
+  }
 
-    return response;
+  std::expected<Clock, APIError> GetMarketClockInfo() {
+    const auto &query = CLOCK_ENDPOINT;
+    return cli_.template Request<Clock>(Req::GET, query);
+  }
+
+  std::expected<CalendarResponse, APIError>
+  GetMarketCalendarInfo(const CalendarRequest &c = {}) {
+    utils::QueryBuilder qb;
+    qb.add("start", c.start);
+    qb.add("end", c.end);
+    qb.add("date_type", c.dateType);
+    const auto &query = std::format("{}?{}", CALENDAR_ENDPOINT, qb.q);
+    return cli_.template Request<CalendarResponse>(Req::GET, query);
+  }
+
+  std::expected<std::vector<OrderResponse>, APIError>
+  GetAllOrders(const OrderListParam &o = {}) {
+    auto status = o.status ? ToString(*o.status) : std::nullopt;
+    auto limit =
+        o.limit ? std::make_optional(std::to_string(*o.limit)) : std::nullopt;
+    auto direction = o.direction ? ToString(*o.direction) : std::nullopt;
+    auto nested = o.nested ? std::make_optional(*o.nested ? "true" : "false")
+                           : std::nullopt;
+    auto symbols = o.symbols
+                       ? std::make_optional(utils::SymbolsEncode(*o.symbols))
+                       : std::nullopt;
+    auto side = o.side ? ToString(*o.side) : std::nullopt;
+
+    utils::QueryBuilder qb;
+    qb.add("status", status);
+    qb.add("limit", limit);
+    qb.add("after", o.after);
+    qb.add("until", o.until);
+    qb.add("direction", direction);
+    qb.add("nested", nested);
+    qb.add("symbols", symbols);
+    qb.add("side", side);
+    if (o.assetClass) {
+      for (const auto &a : *o.assetClass) {
+        qb.add("asset_class", ToString(a));
+      }
+    }
+    qb.add("before_order_id", o.beforeOrderID);
+    qb.add("after_order_id", o.afterOrderID);
+    const auto query = std::format("{}?{}", ORDERS_ENDPOINT, qb.q);
+    std::println("Query: {}", query);
+    return cli_.template Request<std::vector<OrderResponse>>(Req::GET, query);
+  }
+
+  std::expected<OrderID, APIError> DeleteAllOrders() {
+    const auto &query = ORDERS_ENDPOINT;
+    return cli_.template Request<OrderID>(Req::DELETE, query);
+  }
+
+  std::expected<OrderResponse, APIError>
+  GetOrderByClientID(std::string_view id) {
+    utils::QueryBuilder qb;
+    qb.add("client_order_id", id);
+    const auto query =
+        std::format("{}:by_client_order_id?{}", ORDERS_ENDPOINT, qb.q);
+    return cli_.template Request<OrderResponse>(Req::GET, query);
+  }
+
+  std::expected<OrderResponse, APIError>
+  GetOrderByID(std::string_view id, std::optional<bool> nstd = std::nullopt) {
+    auto nested =
+        nstd ? std::make_optional((*nstd ? "true" : "false")) : std::nullopt;
+
+    utils::QueryBuilder qb;
+    qb.add("nested", nested);
+    const auto query = std::format("{}/{}?{}", ORDERS_ENDPOINT, id, qb.q);
+    return cli_.template Request<OrderResponse>(Req::GET, query);
   }
 
 private:
@@ -176,6 +163,8 @@ private:
   static constexpr const char *ACCOUNT_ENDPOINT = "/v2/account";
   static constexpr const char *ORDERS_ENDPOINT = "/v2/orders";
   static constexpr const char *POSITIONS_ENDPOINT = "/v2/positions";
+  static constexpr const char *CLOCK_ENDPOINT = "/v2/clock";
+  static constexpr const char *CALENDAR_ENDPOINT = "/v2/calendar";
 };
 
 using TradingClient = TradingClientT<Environment, HttpClient>;

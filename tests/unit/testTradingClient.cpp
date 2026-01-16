@@ -1,4 +1,4 @@
-#include <alpaca/alpaca.hpp>
+#include <alpaca/client/tradingClient.hpp>
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
@@ -37,6 +37,7 @@ struct FakeHttpClient {
     std::string contentType;
   };
 
+  Headers headers;
   std::vector<Call> calls;
 
   std::function<std::expected<Response, std::string>(std::string_view,
@@ -49,7 +50,7 @@ struct FakeHttpClient {
                                                      const Headers &)>
       onDelete;
 
-  explicit FakeHttpClient(std::string = {}) {}
+  explicit FakeHttpClient(std::string url, Headers hdrs) : headers(hdrs) {}
 
   std::expected<Response, std::string> Get(std::string_view path,
                                            const Headers &h) {
@@ -76,6 +77,57 @@ struct FakeHttpClient {
     if (onDelete)
       return onDelete(path, h);
     return Response{200, "{}"};
+  }
+
+  template <class T>
+  std::expected<T, alpaca::APIError>
+  Request(alpaca::Req type, const std::string &path,
+          std::optional<std::string> body = std::nullopt,
+          std::optional<std::string> content_type = std::nullopt) {
+    std::expected<Response, std::string> raw = std::unexpected("uninitialized");
+
+    switch (type) {
+    case alpaca::Req::GET:
+      raw = Get(path, headers);
+      break;
+
+    case alpaca::Req::POST:
+      if (!body || !content_type) {
+        return std::unexpected(alpaca::APIError{
+            alpaca::ErrorCode::Transport,
+            "POST requires body and content_type in FakeHttpClient"});
+      }
+      raw = Post(path, headers, *body, *content_type);
+      break;
+
+    case alpaca::Req::DELETE:
+      raw = Delete(path, headers);
+      break;
+
+    default:
+      return std::unexpected(
+          alpaca::APIError{alpaca::ErrorCode::Unknown, "Unsupported Req"});
+    }
+
+    if (!raw) {
+      return std::unexpected(
+          alpaca::APIError{alpaca::ErrorCode::Transport, raw.error()});
+    }
+
+    if (!alpaca::utils::IsSuccess(raw->status)) {
+      return std::unexpected(
+          alpaca::APIError{alpaca::ErrorCode::HTTPCode,
+                           std::format("HTTP {}: {}", raw->status, raw->body)});
+    }
+
+    T obj{};
+    auto err = glz::read_json(obj, raw->body);
+    if (err) {
+      return std::unexpected(alpaca::APIError{
+          alpaca::ErrorCode::JSONParsing, glz::format_error(err, raw->body)});
+    }
+
+    return obj;
   }
 };
 
@@ -142,9 +194,9 @@ std::string positions_json_one() {
 
 } // namespace
 
-TEST_CASE("TradingClient.GetAccount: success parses Account via glaze") {
+TEST_CASE("TradingClient.GetAccountReq: success parses Account via glaze") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetBaseUrl()};
+  FakeHttpClient http{env.GetBaseUrl(), env.GetAuthHeaders()};
 
   http.onGet = [&](std::string_view path, const TestEnvironment::Headers &) {
     REQUIRE(path == "/v2/account");
@@ -163,7 +215,7 @@ TEST_CASE("TradingClient.GetAccount: success parses Account via glaze") {
 
 TEST_CASE("TradingClient.GetAccount: non-2xx returns HTTP error") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetBaseUrl()};
+  FakeHttpClient http{env.GetBaseUrl(), env.GetAuthHeaders()};
 
   http.onGet = [&](std::string_view, const TestEnvironment::Headers &) {
     return FakeHttpClient::Response{401, "nope"};
@@ -174,13 +226,15 @@ TEST_CASE("TradingClient.GetAccount: non-2xx returns HTTP error") {
 
   auto acc = cli.GetAccount();
   REQUIRE_FALSE(acc.has_value());
-  REQUIRE_THAT(acc.error(), Catch::Matchers::ContainsSubstring("HTTP 401"));
+  REQUIRE(acc.error().code == alpaca::ErrorCode::HTTPCode);
+  REQUIRE_THAT(acc.error().message,
+               Catch::Matchers::ContainsSubstring("HTTP 401"));
 }
 
 TEST_CASE("TradingClient.SubmitOrder: sends wire JSON (qty/notional), not "
           "internal fields") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetBaseUrl()};
+  FakeHttpClient http{env.GetBaseUrl(), env.GetAuthHeaders()};
 
   http.onPost = [&](std::string_view path, const TestEnvironment::Headers &,
                     std::string_view body, std::string_view contentType) {
@@ -213,7 +267,7 @@ TEST_CASE("TradingClient.SubmitOrder: sends wire JSON (qty/notional), not "
 TEST_CASE(
     "TradingClient.GetAllOpenPositions: success parses Positions via glaze") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetBaseUrl()};
+  FakeHttpClient http{env.GetBaseUrl(), env.GetAuthHeaders()};
 
   http.onGet = [&](std::string_view path, const TestEnvironment::Headers &) {
     REQUIRE(path == "/v2/positions");
@@ -233,7 +287,7 @@ TEST_CASE(
 TEST_CASE("TradingClient.GetOpenPosition: hits /v2/positions/{symbol} and "
           "parses Position") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetBaseUrl()};
+  FakeHttpClient http{env.GetBaseUrl(), env.GetAuthHeaders()};
 
   http.onGet = [&](std::string_view path, const TestEnvironment::Headers &) {
     REQUIRE(path == "/v2/positions/AAPL");
@@ -254,7 +308,7 @@ TEST_CASE("TradingClient.GetOpenPosition: hits /v2/positions/{symbol} and "
 TEST_CASE(
     "TradingClient.ClosePosition: builds qty/percentage query correctly") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetBaseUrl()};
+  FakeHttpClient http{env.GetBaseUrl(), env.GetAuthHeaders()};
 
   http.onDelete = [&](std::string_view path, const TestEnvironment::Headers &) {
     return FakeHttpClient::Response{200, order_response_json_minimal()};
@@ -265,7 +319,7 @@ TEST_CASE(
 
   SECTION("Shares -> qty=... with 9 decimals") {
     TestEnvironment env2{};
-    FakeHttpClient http2{env2.GetBaseUrl()};
+    FakeHttpClient http2{env2.GetBaseUrl(), env2.GetAuthHeaders()};
 
     http2.onDelete = [&](std::string_view path,
                          const TestEnvironment::Headers &) {
@@ -287,7 +341,7 @@ TEST_CASE(
 
   SECTION("Percent -> percentage=... with 9 decimals") {
     TestEnvironment env2{};
-    FakeHttpClient http2{env2.GetBaseUrl()};
+    FakeHttpClient http2{env2.GetBaseUrl(), env2.GetAuthHeaders()};
 
     http2.onDelete = [&](std::string_view path,
                          const TestEnvironment::Headers &) {
@@ -315,7 +369,7 @@ TEST_CASE(
 
     auto res = cli.ClosePosition(p);
     REQUIRE_FALSE(res.has_value());
-    REQUIRE_THAT(res.error(), Catch::Matchers::ContainsSubstring(
-                                  "Unvalid liquidation amount query"));
+    REQUIRE_THAT(res.error().message, Catch::Matchers::ContainsSubstring(
+                                          "Unvalid liquidation amount query"));
   }
 }

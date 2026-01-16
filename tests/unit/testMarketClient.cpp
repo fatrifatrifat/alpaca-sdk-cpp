@@ -1,12 +1,11 @@
 #include <alpaca/client/marketDataClient.hpp>
-#include <alpaca/models/bars/serialize.hpp>
-#include <alpaca/utils/utils.hpp>
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 
 #include <expected>
+#include <print>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -18,7 +17,7 @@ struct TestEnvironment {
   using Headers = std::vector<std::pair<std::string, std::string>>;
 
   std::string dataUrl = "http://unit.test.data";
-  Headers headers = {{"K", "V"}};
+  Headers headers = {{"APCA-API-KEY-ID", "k"}, {"APCA-API-SECRET-KEY", "s"}};
 
   std::string GetDataUrl() const { return dataUrl; }
   Headers GetAuthHeaders() const { return headers; }
@@ -37,12 +36,13 @@ struct FakeHttpClient {
     Headers headers;
   };
 
+  Headers headers;
   std::vector<Call> calls;
 
   std::unordered_map<std::string, std::expected<Response, std::string>>
       getRoutes;
 
-  explicit FakeHttpClient(std::string = {}) {}
+  explicit FakeHttpClient(std::string url, Headers hdrs) : headers(hdrs) {}
 
   std::expected<Response, std::string> Get(std::string_view path,
                                            const Headers &h) {
@@ -53,6 +53,41 @@ struct FakeHttpClient {
                              std::string(path));
     }
     return it->second;
+  }
+
+  template <class T>
+  std::expected<T, alpaca::APIError>
+  Request(alpaca::Req type, const std::string &path,
+          std::optional<std::string> body = std::nullopt,
+          std::optional<std::string> content_type = std::nullopt) {
+    (void)body;
+    (void)content_type;
+
+    if (type != alpaca::Req::GET) {
+      return std::unexpected(alpaca::APIError{
+          alpaca::ErrorCode::Unknown,
+          "FakeHttpClient only supports GET in this test harness"});
+    }
+
+    auto raw = Get(path, headers);
+    if (!raw) {
+      return std::unexpected(
+          alpaca::APIError{alpaca::ErrorCode::Transport, raw->body});
+    }
+
+    if (!alpaca::utils::IsSuccess(raw->status)) {
+      return std::unexpected(alpaca::APIError{alpaca::ErrorCode::HTTPCode,
+                                              raw->body, raw->status});
+    }
+
+    T obj{};
+    auto err = glz::read_json(obj, raw->body);
+    if (err) {
+      return std::unexpected(alpaca::APIError{
+          alpaca::ErrorCode::JSONParsing, glz::format_error(err, raw->body)});
+    }
+
+    return obj;
   }
 };
 
@@ -100,7 +135,7 @@ std::string latest_bars_json() {
 
 TEST_CASE("MarketDataClient.GetBars: builds query and merges paginated pages") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetDataUrl()};
+  FakeHttpClient http{env.GetDataUrl(), env.GetAuthHeaders()};
 
   const std::string page1 = "/v2/stocks/bars?"
                             "symbols=AAPL%2CMSFT&"
@@ -138,7 +173,7 @@ TEST_CASE("MarketDataClient.GetBars: builds query and merges paginated pages") {
 TEST_CASE("MarketDataClient.GetBars: repeated next_page_token triggers "
           "pagination guard") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetDataUrl()};
+  FakeHttpClient http{env.GetDataUrl(), env.GetAuthHeaders()};
 
   const std::string page1 = "/v2/stocks/bars?"
                             "symbols=AAPL&"
@@ -164,12 +199,12 @@ TEST_CASE("MarketDataClient.GetBars: repeated next_page_token triggers "
 
   auto res = cli.GetBars(p);
   REQUIRE_FALSE(res.has_value());
-  REQUIRE(res.error() == "Pagination error: next_page_token repeated");
+  REQUIRE(res.error().message == "Pagination error: next_page_token repeated");
 }
 
 TEST_CASE("MarketDataClient.GetBars: input validation errors") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetDataUrl()};
+  FakeHttpClient http{env.GetDataUrl(), env.GetAuthHeaders()};
   alpaca::MarketDataClientT<TestEnvironment, FakeHttpClient> cli(
       env, std::move(http));
 
@@ -178,7 +213,7 @@ TEST_CASE("MarketDataClient.GetBars: input validation errors") {
     p.symbols = {};
     auto res = cli.GetBars(p);
     REQUIRE_FALSE(res.has_value());
-    REQUIRE(res.error() == "Empty symbol");
+    REQUIRE(res.error().message == "Empty symbol");
   }
 
   SECTION("empty timeframe") {
@@ -187,7 +222,7 @@ TEST_CASE("MarketDataClient.GetBars: input validation errors") {
     p.timeframe = "";
     auto res = cli.GetBars(p);
     REQUIRE_FALSE(res.has_value());
-    REQUIRE(res.error() == "Empty timeframe");
+    REQUIRE(res.error().message == "Empty timeframe");
   }
 
   SECTION("limit <= 0") {
@@ -196,13 +231,13 @@ TEST_CASE("MarketDataClient.GetBars: input validation errors") {
     p.limit = 0;
     auto res = cli.GetBars(p);
     REQUIRE_FALSE(res.has_value());
-    REQUIRE(res.error() == "Empty limit");
+    REQUIRE(res.error().message == "Empty limit");
   }
 }
 
 TEST_CASE("MarketDataClient.GetBars: HTTP non-2xx returns HTTP error") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetDataUrl()};
+  FakeHttpClient http{env.GetDataUrl(), env.GetAuthHeaders()};
 
   const std::string page1 = "/v2/stocks/bars?"
                             "symbols=AAPL&"
@@ -223,13 +258,16 @@ TEST_CASE("MarketDataClient.GetBars: HTTP non-2xx returns HTTP error") {
 
   auto res = cli.GetBars(p);
   REQUIRE_FALSE(res.has_value());
-  REQUIRE_THAT(res.error(), Catch::Matchers::ContainsSubstring("HTTP 429"));
+  REQUIRE(res.error().code == alpaca::ErrorCode::HTTPCode);
+  REQUIRE(res.error().status.value() == 429);
+  REQUIRE_THAT(res.error().message,
+               Catch::Matchers::ContainsSubstring("rate_limited"));
 }
 
 TEST_CASE(
     "MarketDataClient.GetBars: glaze parse error returns formatted error") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetDataUrl()};
+  FakeHttpClient http{env.GetDataUrl(), env.GetAuthHeaders()};
 
   const std::string page1 = "/v2/stocks/bars?"
                             "symbols=AAPL&"
@@ -251,13 +289,13 @@ TEST_CASE(
 
   auto res = cli.GetBars(p);
   REQUIRE_FALSE(res.has_value());
-  REQUIRE_THAT(res.error(), Catch::Matchers::ContainsSubstring("Error Code:"));
+  REQUIRE(res.error().code == alpaca::ErrorCode::JSONParsing);
 }
 
 TEST_CASE("MarketDataClient.GetLatestBar: success parses LatestBars and query "
           "contains feed when provided") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetDataUrl()};
+  FakeHttpClient http{env.GetDataUrl(), env.GetAuthHeaders()};
 
   const std::string path = "/v2/stocks/bars/latest?"
                            "symbols=AAPL%2CMSFT&"
@@ -283,7 +321,7 @@ TEST_CASE("MarketDataClient.GetLatestBar: success parses LatestBars and query "
 
 TEST_CASE("MarketDataClient.GetLatestBar: empty symbols returns error") {
   TestEnvironment env{};
-  FakeHttpClient http{env.GetDataUrl()};
+  FakeHttpClient http{env.GetDataUrl(), env.GetAuthHeaders()};
   alpaca::MarketDataClientT<TestEnvironment, FakeHttpClient> cli(
       env, std::move(http));
 
@@ -292,5 +330,5 @@ TEST_CASE("MarketDataClient.GetLatestBar: empty symbols returns error") {
 
   auto res = cli.GetLatestBar(p);
   REQUIRE_FALSE(res.has_value());
-  REQUIRE(res.error() == "Error: Empty symbol");
+  REQUIRE(res.error().message == "Empty symbol");
 }
