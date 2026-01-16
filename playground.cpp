@@ -9,10 +9,10 @@ int main(int argc, char **argv) {
   auto trade = TradingClient(env);
 
   const OrderListParam o = {
-      .status = OrderStatus::all,
+      .status = OrderStatus::open,
       .symbols = {{"AAPL"}},
   };
-  auto resp = trade.GetAllOrders(o);
+  auto resp = trade.GetOrderByClientID("fc762f2e-d531-48fc-915f-5e61d2d20993");
   if (!resp) {
     if (resp.error().status.has_value()) {
       std::println("{}, {}, {}", static_cast<int>(resp.error().code),
@@ -25,8 +25,5 @@ int main(int argc, char **argv) {
   }
 
   const auto &r = resp.value();
-  std::println("Size: {}", r.size());
-  for (const auto &e : r) {
-    std::println("{}", e.id);
-  }
+  std::println("{}, {}, {}", r.id, r.createdAt, r.clientOrderID);
 }

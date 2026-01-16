@@ -131,6 +131,31 @@ public:
     return cli_.template Request<std::vector<OrderResponse>>(Req::GET, query);
   }
 
+  std::expected<OrderID, APIError> DeleteAllOrders() {
+    const auto &query = ORDERS_ENDPOINT;
+    return cli_.template Request<OrderID>(Req::DELETE, query);
+  }
+
+  std::expected<OrderResponse, APIError>
+  GetOrderByClientID(std::string_view id) {
+    utils::QueryBuilder qb;
+    qb.add("client_order_id", id);
+    const auto query =
+        std::format("{}:by_client_order_id?{}", ORDERS_ENDPOINT, qb.q);
+    return cli_.template Request<OrderResponse>(Req::GET, query);
+  }
+
+  std::expected<OrderResponse, APIError>
+  GetOrderByID(std::string_view id, std::optional<bool> nstd = std::nullopt) {
+    auto nested =
+        nstd ? std::make_optional((*nstd ? "true" : "false")) : std::nullopt;
+
+    utils::QueryBuilder qb;
+    qb.add("nested", nested);
+    const auto query = std::format("{}/{}?{}", ORDERS_ENDPOINT, id, qb.q);
+    return cli_.template Request<OrderResponse>(Req::GET, query);
+  }
+
 private:
   const Env &env_;
   Http cli_;

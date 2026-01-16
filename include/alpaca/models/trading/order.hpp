@@ -262,6 +262,11 @@ struct OrderListParam {
   std::optional<std::string> afterOrderID;
 };
 
+struct OrderID {
+  std::string id;
+  int status;
+};
+
 constexpr std::optional<std::string_view> ToString(OrderStatus d) {
   switch (d) {
   case OrderStatus::all:
