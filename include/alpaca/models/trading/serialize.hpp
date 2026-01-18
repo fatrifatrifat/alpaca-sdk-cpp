@@ -3,6 +3,7 @@
 #include <alpaca/models/trading/calendar.hpp>
 #include <alpaca/models/trading/clock.hpp>
 #include <alpaca/models/trading/order.hpp>
+#include <alpaca/models/trading/portfolio.hpp>
 #include <alpaca/models/trading/position.hpp>
 #include <glaze/glaze.hpp>
 
@@ -208,6 +209,24 @@ template <> struct meta<alpaca::ReplaceOrderParam> {
       object("qty", &T::qty, "time_in_force", &T::timeInForce, "limit_price",
              &T::limitPrice, "stop_price", &T::stopPrice, "trail", &T::trail,
              "client_order_id", &T::clientOrderID);
+};
+
+template <> struct meta<alpaca::PortfolioParam> {
+  using T = alpaca::PortfolioParam;
+  static constexpr auto value =
+      object("period", &T::period, "timeframe", &T::timeframe,
+             "intraday_reporting", &T::intradayReporting, "start", &T::start,
+             "pnl_reset", &T::pnlReset, "end", &T::end, "extended_hours",
+             &T::extendedHours, "cashflow_types", &T::cashflowTypes);
+};
+
+template <> struct meta<alpaca::Portfolio> {
+  using T = alpaca::Portfolio;
+  static constexpr auto value =
+      object("timestamp", &T::timestamp, "equity", &T::equity, "profit_loss",
+             &T::profitLoss, "profit_loss_pct", &T::profitLossPCT, "base_value",
+             &T::baseValue, "base_value_asof", &T::baseValueAsof, "timeframe",
+             &T::timeframe, "cashflow", &T::cashflow);
 };
 
 }; // namespace glz

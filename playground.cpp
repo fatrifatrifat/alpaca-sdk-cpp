@@ -12,21 +12,15 @@ int main(int argc, char **argv) {
       .status = OrderStatus::open,
       .symbols = {{"AAPL"}},
   };
-  auto resp = trade.GetAllOrders(o);
+
+  auto resp = trade.GetPortfolioHistory({});
 
   if (!resp) {
     std::println("{}", resp.error());
     return 1;
   }
 
-  const auto &r = resp.value();
-  for (const auto &o : r) {
-    std::println("Delete order: {}", o.id);
-    auto resp_delete = trade.DeleteOrderByID(o.id);
-
-    if (!resp_delete) {
-      std::println("{}", resp_delete.error());
-      return 1;
-    }
-  }
+  std::println("{}, {}, {}, {}, {}, {}, {}", resp->timestamp, resp->equity,
+               resp->profitLoss, resp->profitLossPCT, resp->baseValue,
+               resp->baseValueAsof.value(), resp->timeframe);
 }

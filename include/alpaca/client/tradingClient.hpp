@@ -146,7 +146,8 @@ public:
   }
 
   std::expected<OrderResponse, APIError>
-  GetOrderByID(std::string_view orderID, std::optional<bool> nstd = std::nullopt) {
+  GetOrderByID(std::string_view orderID,
+               std::optional<bool> nstd = std::nullopt) {
     auto nested =
         nstd ? std::make_optional((*nstd ? "true" : "false")) : std::nullopt;
 
@@ -157,7 +158,7 @@ public:
   }
 
   std::expected<OrderResponse, APIError>
-  ReplaceOrderByID(std::string_view orderID, const ReplaceOrderParam& r) {
+  ReplaceOrderByID(std::string_view orderID, const ReplaceOrderParam &r) {
     std::string json;
     auto order_request = glz::write_json(r);
     if (!order_request) {
@@ -176,6 +177,23 @@ public:
     return cli_.template Request<std::monostate>(Req::DELETE, query);
   }
 
+  std::expected<Portfolio, APIError>
+  GetPortfolioHistory(const PortfolioParam &p) {
+    utils::QueryBuilder qb;
+    qb.add("period", p.period);
+    qb.add("timeframe", p.timeframe);
+    qb.add("intraday_reporting", ToString(p.intradayReporting));
+    qb.add("start", p.start);
+    qb.add("pnl_reset", ToString(p.pnlReset));
+    qb.add("end", p.end);
+    qb.add("extendedHours", p.extendedHours);
+    qb.add("cashflowTypes", p.cashflowTypes);
+    const auto query =
+        std::format("{}/{}?{}", ACCOUNT_ENDPOINT, PORTFOLIO_ENDPOINT, qb.q);
+    std::println("{}", query);
+    return cli_.template Request<Portfolio>(Req::GET, query);
+  }
+
 private:
   const Env &env_;
   Http cli_;
@@ -185,6 +203,7 @@ private:
   static constexpr const char *POSITIONS_ENDPOINT = "/v2/positions";
   static constexpr const char *CLOCK_ENDPOINT = "/v2/clock";
   static constexpr const char *CALENDAR_ENDPOINT = "/v2/calendar";
+  static constexpr const char *PORTFOLIO_ENDPOINT = "portfolio/history";
 };
 
 using TradingClient = TradingClientT<Environment, HttpClient>;
