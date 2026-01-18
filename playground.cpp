@@ -12,18 +12,21 @@ int main(int argc, char **argv) {
       .status = OrderStatus::open,
       .symbols = {{"AAPL"}},
   };
-  auto resp = trade.GetOrderByClientID("fc762f2e-d531-48fc-915f-5e61d2d20993");
+  auto resp = trade.GetAllOrders(o);
+
   if (!resp) {
-    if (resp.error().status.has_value()) {
-      std::println("{}, {}, {}", static_cast<int>(resp.error().code),
-                   resp.error().message, *resp.error().status);
-    } else {
-      std::println("{}, {}", static_cast<int>(resp.error().code),
-                   resp.error().message);
-    }
+    std::println("{}", resp.error());
     return 1;
   }
 
   const auto &r = resp.value();
-  std::println("{}, {}, {}", r.id, r.createdAt, r.clientOrderID);
+  for (const auto &o : r) {
+    std::println("Delete order: {}", o.id);
+    auto resp_delete = trade.DeleteOrderByID(o.id);
+
+    if (!resp_delete) {
+      std::println("{}", resp_delete.error());
+      return 1;
+    }
+  }
 }

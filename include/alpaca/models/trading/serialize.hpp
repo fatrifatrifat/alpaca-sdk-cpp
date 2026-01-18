@@ -202,4 +202,12 @@ template <> struct meta<alpaca::Calendar> {
              &T::session_open, "settlement_date", &T::settlementDate);
 };
 
+template <> struct meta<alpaca::ReplaceOrderParam> {
+  using T = alpaca::ReplaceOrderParam;
+  static constexpr auto value =
+      object("qty", &T::qty, "time_in_force", &T::timeInForce, "limit_price",
+             &T::limitPrice, "stop_price", &T::stopPrice, "trail", &T::trail,
+             "client_order_id", &T::clientOrderID);
+};
+
 }; // namespace glz

@@ -2,6 +2,7 @@
 #include <alpaca/client/environment.hpp>
 #include <alpaca/utils/utils.hpp>
 #include <expected>
+#include <format>
 #include <glaze/glaze.hpp>
 #include <httplib.h>
 #include <optional>
@@ -104,6 +105,14 @@ public:
     case Req::DELETE:
       resp = cli_.Delete(path, headers_);
       break;
+    case Req::PATCH:
+      if (!body || !content_type) {
+        return std::unexpected(
+            alpaca::APIError{alpaca::ErrorCode::IllArgument,
+                             "PATCH requires body and content_type"});
+      }
+      resp = cli_.Patch(path, headers_, *body, *content_type);
+      break;
     }
 
     if (!resp) {
@@ -114,6 +123,10 @@ public:
     if (!utils::IsSuccess(resp->status)) {
       return std::unexpected(
           APIError{ErrorCode::HTTPCode, resp->body, resp->status});
+    }
+
+    if(resp->body.empty()) {
+      return T{};
     }
 
     T obj;
@@ -133,3 +146,16 @@ private:
 };
 
 }; // namespace alpaca
+
+template <> struct std::formatter<alpaca::APIError> {
+  constexpr auto parse(std::format_parse_context &ctx) { return ctx.begin(); }
+
+  auto format(const alpaca::APIError &e, std::format_context &ctx) const {
+    if (e.status) {
+      return std::format_to(ctx.out(), "[{}, {}, {}]", static_cast<int>(e.code),
+                            e.message, *e.status);
+    }
+    return std::format_to(ctx.out(), "[{}, {}]", static_cast<int>(e.code),
+                          e.message);
+  }
+};

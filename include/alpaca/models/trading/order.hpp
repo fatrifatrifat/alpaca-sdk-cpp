@@ -267,6 +267,15 @@ struct OrderID {
   int status;
 };
 
+struct ReplaceOrderParam {
+  std::optional<long double> qty;
+  std::optional<OrderTimeInForce> timeInForce;
+  std::optional<long double> limitPrice;
+  std::optional<long double> stopPrice;
+  std::optional<long double> trail;
+  std::optional<std::string> clientOrderID;
+};
+
 constexpr std::optional<std::string_view> ToString(OrderStatus d) {
   switch (d) {
   case OrderStatus::all:

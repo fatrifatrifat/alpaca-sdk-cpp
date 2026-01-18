@@ -146,14 +146,34 @@ public:
   }
 
   std::expected<OrderResponse, APIError>
-  GetOrderByID(std::string_view id, std::optional<bool> nstd = std::nullopt) {
+  GetOrderByID(std::string_view orderID, std::optional<bool> nstd = std::nullopt) {
     auto nested =
         nstd ? std::make_optional((*nstd ? "true" : "false")) : std::nullopt;
 
     utils::QueryBuilder qb;
     qb.add("nested", nested);
-    const auto query = std::format("{}/{}?{}", ORDERS_ENDPOINT, id, qb.q);
+    const auto query = std::format("{}/{}?{}", ORDERS_ENDPOINT, orderID, qb.q);
     return cli_.template Request<OrderResponse>(Req::GET, query);
+  }
+
+  std::expected<OrderResponse, APIError>
+  ReplaceOrderByID(std::string_view orderID, const ReplaceOrderParam& r) {
+    std::string json;
+    auto order_request = glz::write_json(r);
+    if (!order_request) {
+      return std::unexpected(APIError{
+          ErrorCode::JSONParsing, glz::format_error(order_request.error())});
+    }
+
+    const auto query = std::format("{}/{}", ORDERS_ENDPOINT, orderID);
+    return cli_.template Request<OrderResponse>(
+        Req::PATCH, query, order_request.value(), "application/json");
+  }
+
+  std::expected<std::monostate, APIError>
+  DeleteOrderByID(std::string_view orderID) {
+    const auto query = std::format("{}/{}", ORDERS_ENDPOINT, orderID);
+    return cli_.template Request<std::monostate>(Req::DELETE, query);
   }
 
 private:
