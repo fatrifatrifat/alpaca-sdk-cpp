@@ -42,7 +42,7 @@ public:
   }
 
   std::expected<OrderResponse, APIError>
-  SubmitOrder(const OrderRequest &request) {
+  SubmitOrder(const OrderRequestParam &request) {
     std::string json;
     auto order_request = glz::write_json(request);
     if (!order_request) {

@@ -66,7 +66,7 @@ struct StopLoss {
   auto operator<=>(const StopLoss &) const = default;
 };
 
-struct OrderRequest {
+struct OrderRequestParam {
   std::string symbol;
   ShareAmount amt;
   OrderSide side;
@@ -114,7 +114,7 @@ struct OrderRequestWire {
   std::optional<PositionIntent> positionIntent;
 };
 
-inline OrderRequestWire toWire(const OrderRequest &r) {
+inline OrderRequestWire toWire(const OrderRequestParam &r) {
   OrderRequestWire w{};
   w.symbol = r.symbol;
   w.side = r.side;
@@ -156,7 +156,7 @@ inline OrderRequestWire toWire(const OrderRequest &r) {
   return w;
 }
 
-inline std::optional<std::string> fromWire(OrderRequest &r,
+inline std::optional<std::string> fromWire(OrderRequestParam &r,
                                            const OrderRequestWire &w) {
   r.symbol = w.symbol;
   r.side = w.side;

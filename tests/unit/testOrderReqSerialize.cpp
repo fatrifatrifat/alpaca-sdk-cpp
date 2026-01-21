@@ -9,8 +9,8 @@
 
 namespace {
 
-alpaca::OrderRequest base_req() {
-  alpaca::OrderRequest r{};
+alpaca::OrderRequestParam base_req() {
+  alpaca::OrderRequestParam r{};
   r.symbol = "AAPL";
   r.side = alpaca::OrderSide::buy;
   r.type = alpaca::OrderType::market;
@@ -18,7 +18,7 @@ alpaca::OrderRequest base_req() {
   return r;
 }
 
-std::string write_json_or_fail(const alpaca::OrderRequest &req) {
+std::string write_json_or_fail(const alpaca::OrderRequestParam &req) {
   std::string json;
   auto ec = glz::write_json(req, json);
   REQUIRE(!ec);
@@ -26,8 +26,8 @@ std::string write_json_or_fail(const alpaca::OrderRequest &req) {
   return json;
 }
 
-alpaca::OrderRequest read_json_or_fail(const std::string &json) {
-  alpaca::OrderRequest out{};
+alpaca::OrderRequestParam read_json_or_fail(const std::string &json) {
+  alpaca::OrderRequestParam out{};
   auto ec = glz::read_json(out, json);
   REQUIRE(!ec);
   return out;
@@ -35,8 +35,9 @@ alpaca::OrderRequest read_json_or_fail(const std::string &json) {
 
 } // namespace
 
-TEST_CASE("Glaze OrderRequest serialization uses WIRE schema (no amt/trail_amt "
-          "keys)") {
+TEST_CASE(
+    "Glaze OrderRequestParam serialization uses WIRE schema (no amt/trail_amt "
+    "keys)") {
   auto req = base_req();
   req.amt = alpaca::Quantity{10};
   req.trailAmt = alpaca::TrailAmount{alpaca::TrailPrice{0.25L}};
@@ -50,7 +51,7 @@ TEST_CASE("Glaze OrderRequest serialization uses WIRE schema (no amt/trail_amt "
   REQUIRE(json.find("\"time_in_force\"") != std::string::npos);
 }
 
-TEST_CASE("Glaze boundary: Quantity -> JSON -> OrderRequest roundtrip") {
+TEST_CASE("Glaze boundary: Quantity -> JSON -> OrderRequestParam roundtrip") {
   auto req = base_req();
   req.amt = alpaca::Quantity{10};
 
@@ -70,7 +71,7 @@ TEST_CASE("Glaze boundary: Quantity -> JSON -> OrderRequest roundtrip") {
   REQUIRE(json.find("\"notional\"") == std::string::npos);
 }
 
-TEST_CASE("Glaze boundary: Notional -> JSON -> OrderRequest roundtrip") {
+TEST_CASE("Glaze boundary: Notional -> JSON -> OrderRequestParam roundtrip") {
   auto req = base_req();
   req.amt = alpaca::Notional{250.50L};
 

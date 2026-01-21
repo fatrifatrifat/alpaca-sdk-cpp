@@ -58,8 +58,8 @@ template <> struct meta<alpaca::StopLoss> {
       object("stop_price", &T::stopPrice, "limit_price", &T::limitPrice);
 };
 
-template <> struct meta<alpaca::OrderRequest> {
-  using T = alpaca::OrderRequest;
+template <> struct meta<alpaca::OrderRequestParam> {
+  using T = alpaca::OrderRequestParam;
   static constexpr auto value = object(
       "symbol", &T::symbol, "amt", &T::amt, "side", &T::side, "type", &T::type,
       "time_in_force", &T::timeInForce, "limit_price", &T::limitPrice,
@@ -82,18 +82,18 @@ template <> struct meta<alpaca::OrderRequestWire> {
       &T::positionIntent);
 };
 
-template <> struct to<JSON, alpaca::OrderRequest> {
+template <> struct to<JSON, alpaca::OrderRequestParam> {
   template <auto Opts>
-  static void op(const alpaca::OrderRequest &value, is_context auto &&ctx,
+  static void op(const alpaca::OrderRequestParam &value, is_context auto &&ctx,
                  auto &&b, auto &&ix) noexcept {
     auto wire = toWire(value);
     serialize<JSON>::op<Opts>(wire, ctx, b, ix);
   }
 };
 
-template <> struct from<JSON, alpaca::OrderRequest> {
+template <> struct from<JSON, alpaca::OrderRequestParam> {
   template <auto Opts>
-  static void op(alpaca::OrderRequest &value, is_context auto &&ctx, auto &&it,
+  static void op(alpaca::OrderRequestParam &value, is_context auto &&ctx, auto &&it,
                  auto &&end) {
     alpaca::OrderRequestWire wire{};
     parse<JSON>::op<Opts>(wire, ctx, it, end);

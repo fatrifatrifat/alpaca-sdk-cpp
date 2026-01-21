@@ -251,7 +251,7 @@ TEST_CASE("TradingClient.SubmitOrder: sends wire JSON (qty/notional), not "
   alpaca::TradingClientT<TestEnvironment, FakeHttpClient> cli(env,
                                                               std::move(http));
 
-  alpaca::OrderRequest req{};
+  alpaca::OrderRequestParam req{};
   req.symbol = "AAPL";
   req.amt = alpaca::Quantity{10};
   req.side = alpaca::OrderSide::buy;
