@@ -1,3 +1,4 @@
+include(CTest)
 include(FetchContent)
 
 FetchContent_Declare(
@@ -25,8 +26,6 @@ target_link_libraries(alpaca_tests
 )
 
 target_compile_features(alpaca_tests PRIVATE cxx_std_23)
-
-include(CTest)
 
 include(Catch)
 catch_discover_tests(alpaca_tests)
