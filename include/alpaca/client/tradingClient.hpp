@@ -10,7 +10,7 @@ namespace alpaca {
 template <class Env = Environment, class Http = HttpClient>
 class TradingClientT {
 private:
-  static std::expected<std::string, std::string>
+  static constexpr std::expected<std::string, std::string>
   BuildClosePositionQuery(const LiquidationAmount &a) {
     return std::visit(
         [](auto &&x) -> std::expected<std::string, std::string> {
@@ -43,8 +43,8 @@ public:
 
   std::expected<OrderResponse, APIError>
   SubmitOrder(const OrderRequestParam &request) {
-    std::string json;
-    auto order_request = glz::write_json(request);
+    std::expected<std::string, glz::error_ctx> order_request;
+    order_request = glz::write_json(request);
     if (!order_request) {
       return std::unexpected(APIError{
           ErrorCode::JSONParsing, glz::format_error(order_request.error())});
@@ -67,18 +67,14 @@ public:
 
   std::expected<OrderResponse, APIError>
   ClosePosition(const ClosePositionParams &cpp) {
-    if (cpp.symbol_or_asset_id.empty()) {
-      return std::unexpected(
-          APIError{ErrorCode::IllArgument, "Unvalid empty symbol parameter"});
-    }
-    const auto qty_query = BuildClosePositionQuery(cpp.amt);
-    if (!qty_query) {
+    const auto qtyQuery = BuildClosePositionQuery(cpp.amt);
+    if (!qtyQuery) {
       return std::unexpected(
           APIError{ErrorCode::IllArgument, "Unvalid liquidation amount query"});
     }
 
     const auto query = std::format("{}/{}?{}", POSITIONS_ENDPOINT,
-                                   cpp.symbol_or_asset_id, qty_query.value());
+                                   cpp.symbol_or_asset_id, qtyQuery.value());
     return cli_.template Request<OrderResponse>(Req::DELETE, query);
   }
 
@@ -99,26 +95,23 @@ public:
 
   std::expected<std::vector<OrderResponse>, APIError>
   GetAllOrders(const OrderListParam &o = {}) {
-    auto status = o.status ? ToString(*o.status) : std::nullopt;
     auto limit =
         o.limit ? std::make_optional(std::to_string(*o.limit)) : std::nullopt;
-    auto direction = o.direction ? ToString(*o.direction) : std::nullopt;
     auto nested = o.nested ? std::make_optional(*o.nested ? "true" : "false")
                            : std::nullopt;
     auto symbols = o.symbols
                        ? std::make_optional(utils::SymbolsEncode(*o.symbols))
                        : std::nullopt;
-    auto side = o.side ? ToString(*o.side) : std::nullopt;
 
     utils::QueryBuilder qb;
-    qb.add("status", status);
+    qb.add("status", ToString(o.status));
     qb.add("limit", limit);
     qb.add("after", o.after);
     qb.add("until", o.until);
-    qb.add("direction", direction);
+    qb.add("direction", ToString(o.direction));
     qb.add("nested", nested);
     qb.add("symbols", symbols);
-    qb.add("side", side);
+    qb.add("side", ToString(o.side));
     if (o.assetClass) {
       for (const auto &a : *o.assetClass) {
         qb.add("asset_class", ToString(a));
@@ -126,8 +119,8 @@ public:
     }
     qb.add("before_order_id", o.beforeOrderID);
     qb.add("after_order_id", o.afterOrderID);
-    const auto query = std::format("{}?{}", ORDERS_ENDPOINT, qb.q);
-    std::println("Query: {}", query);
+    const std::string query = std::format("{}?{}", ORDERS_ENDPOINT, qb.q);
+
     return cli_.template Request<std::vector<OrderResponse>>(Req::GET, query);
   }
 
@@ -159,13 +152,12 @@ public:
 
   std::expected<OrderResponse, APIError>
   ReplaceOrderByID(std::string_view orderID, const ReplaceOrderParam &r) {
-    std::string json;
-    auto order_request = glz::write_json(r);
+    std::expected<std::string, glz::error_ctx> order_request;
+    order_request = glz::write_json(r);
     if (!order_request) {
       return std::unexpected(APIError{
           ErrorCode::JSONParsing, glz::format_error(order_request.error())});
     }
-
     const auto query = std::format("{}/{}", ORDERS_ENDPOINT, orderID);
     return cli_.template Request<OrderResponse>(
         Req::PATCH, query, order_request.value(), "application/json");
@@ -188,9 +180,8 @@ public:
     qb.add("end", p.end);
     qb.add("extendedHours", p.extendedHours);
     qb.add("cashflowTypes", p.cashflowTypes);
-    const auto query =
+    const std::string query =
         std::format("{}/{}?{}", ACCOUNT_ENDPOINT, PORTFOLIO_ENDPOINT, qb.q);
-    std::println("{}", query);
     return cli_.template Request<Portfolio>(Req::GET, query);
   }
 

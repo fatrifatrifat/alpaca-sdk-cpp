@@ -60,8 +60,12 @@ struct LatestBars {
   std::map<std::string, Bar> bars;
 };
 
-constexpr std::optional<std::string_view> ToString(BarFeed f) {
-  switch (f) {
+constexpr std::optional<std::string_view> ToString(std::optional<BarFeed> f) {
+  if (!f) {
+    return std::nullopt;
+  }
+
+  switch (*f) {
   case BarFeed::SIP:
     return "sip";
   case BarFeed::IEX:
@@ -75,8 +79,13 @@ constexpr std::optional<std::string_view> ToString(BarFeed f) {
   }
 }
 
-constexpr std::optional<std::string_view> ToString(BarAdjustment a) {
-  switch (a) {
+constexpr std::optional<std::string_view>
+ToString(std::optional<BarAdjustment> a) {
+  if (!a) {
+    return std::nullopt;
+  }
+
+  switch (*a) {
   case BarAdjustment::Raw:
     return "raw";
   case BarAdjustment::Split:
@@ -92,8 +101,12 @@ constexpr std::optional<std::string_view> ToString(BarAdjustment a) {
   }
 }
 
-constexpr std::optional<std::string_view> ToString(BarSort s) {
-  switch (s) {
+constexpr std::optional<std::string_view> ToString(std::optional<BarSort> s) {
+  if (!s) {
+    return std::nullopt;
+  }
+
+  switch (*s) {
   case BarSort::Asc:
     return "asc";
   case BarSort::Desc:

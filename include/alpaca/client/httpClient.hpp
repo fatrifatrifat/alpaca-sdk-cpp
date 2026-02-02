@@ -125,7 +125,7 @@ public:
           APIError{ErrorCode::HTTPCode, resp->body, resp->status});
     }
 
-    if(resp->body.empty()) {
+    if (resp->body.empty()) {
       return T{};
     }
 

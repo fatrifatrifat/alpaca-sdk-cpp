@@ -12,27 +12,8 @@ template <class Env = Environment, class Http = HttpClient>
 class MarketDataClientT {
 private:
   std::expected<Bars, APIError> GetBarsPimpl(const BarParams &p) {
-    if (p.symbols.empty()) {
-      return std::unexpected(APIError{ErrorCode::IllArgument, "Empty symbol"});
-    }
-    if (p.timeframe.empty()) {
-      return std::unexpected(
-          APIError{ErrorCode::IllArgument, "Empty timeframe"});
-    }
-    if (p.start.empty() || p.end.empty()) {
-      return std::unexpected(
-          APIError{ErrorCode::IllArgument, "Empty start/end"});
-    }
-    if (p.limit.has_value() && p.limit.value() <= 0) {
-      return std::unexpected(APIError{ErrorCode::IllArgument, "Empty limit"});
-    }
-
-    auto feed = p.feed ? ToString(p.feed.value()) : std::nullopt;
-    auto adjustment =
-        p.adjustment ? ToString(p.adjustment.value()) : std::nullopt;
-    auto sort = p.sort ? ToString(p.sort.value()) : std::nullopt;
-    auto limit = p.limit ? std::make_optional(std::to_string(p.limit.value()))
-                         : std::nullopt;
+    const auto limit =
+        p.limit ? std::make_optional(std::to_string(*p.limit)) : std::nullopt;
 
     utils::QueryBuilder qb;
     qb.add("symbols", utils::SymbolsEncode(p.symbols));
@@ -40,14 +21,13 @@ private:
     qb.add("start", p.start);
     qb.add("end", p.end);
     qb.add("limit", limit);
-    qb.add("adjustment", adjustment);
+    qb.add("adjustment", ToString(p.adjustment));
     qb.add("asof", p.asof);
-    qb.add("feed", feed);
+    qb.add("feed", ToString(p.feed));
     qb.add("currency", p.currency);
     qb.add("page_token", p.page_token);
-    qb.add("sort", sort);
-
-    const auto query = BARS_ENDPOINT + qb.q;
+    qb.add("sort", ToString(p.sort));
+    const std::string query = BARS_ENDPOINT + qb.q;
     return cli_.template Request<Bars>(Req::GET, query);
   }
 
@@ -93,17 +73,10 @@ public:
   }
 
   std::expected<LatestBars, APIError> GetLatestBar(const LatestBarParam &p) {
-    if (p.symbols.empty()) {
-      return std::unexpected(APIError{ErrorCode::IllArgument, "Empty symbol"});
-    }
-
-    auto feed = p.feed ? ToString(p.feed.value()) : std::nullopt;
-
     utils::QueryBuilder qb;
     qb.add("symbols", utils::SymbolsEncode(p.symbols));
-    qb.add("feed", feed);
-
-    const auto query = LATEST_BARS_ENDPOINT + qb.q;
+    qb.add("feed", ToString(p.feed));
+    const std::string query = LATEST_BARS_ENDPOINT + qb.q;
     return cli_.template Request<LatestBars>(Req::GET, query);
   }
 

@@ -276,8 +276,13 @@ struct ReplaceOrderParam {
   std::optional<std::string> clientOrderID;
 };
 
-constexpr std::optional<std::string_view> ToString(OrderStatus d) {
-  switch (d) {
+constexpr std::optional<std::string_view>
+ToString(std::optional<OrderStatus> d) {
+  if (!d) {
+    return std::nullopt;
+  }
+
+  switch (*d) {
   case OrderStatus::all:
     return "all";
   case OrderStatus::closed:
@@ -289,8 +294,13 @@ constexpr std::optional<std::string_view> ToString(OrderStatus d) {
   }
 }
 
-constexpr std::optional<std::string_view> ToString(OrderDirection d) {
-  switch (d) {
+constexpr std::optional<std::string_view>
+ToString(std::optional<OrderDirection> d) {
+  if (!d) {
+    return std::nullopt;
+  }
+
+  switch (*d) {
   case OrderDirection::asc:
     return "asc";
   case OrderDirection::desc:
@@ -300,8 +310,12 @@ constexpr std::optional<std::string_view> ToString(OrderDirection d) {
   }
 }
 
-constexpr std::optional<std::string_view> ToString(OrderSide d) {
-  switch (d) {
+constexpr std::optional<std::string_view> ToString(std::optional<OrderSide> d) {
+  if (!d) {
+    return std::nullopt;
+  }
+
+  switch (*d) {
   case OrderSide::buy:
     return "buy";
   case OrderSide::sell:
@@ -310,8 +324,14 @@ constexpr std::optional<std::string_view> ToString(OrderSide d) {
     return std::nullopt;
   }
 }
-constexpr std::optional<std::string_view> ToString(OrderAssetClass d) {
-  switch (d) {
+
+constexpr std::optional<std::string_view>
+ToString(std::optional<OrderAssetClass> d) {
+  if (!d) {
+    return std::nullopt;
+  }
+
+  switch (*d) {
   case OrderAssetClass::us_equity:
     return "us_equity";
   case OrderAssetClass::us_option:
