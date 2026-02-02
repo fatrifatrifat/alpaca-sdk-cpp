@@ -11,7 +11,7 @@ namespace alpaca {
 template <class Env = Environment, class Http = HttpClient>
 class MarketDataClientT {
 private:
-  std::expected<Bars, APIError> GetBarsPimpl(const BarParams &p) {
+  std::expected<Bars, APIError> GetBarsPimpl(const BarParams &p) noexcept {
     const auto limit =
         p.limit ? std::make_optional(std::to_string(*p.limit)) : std::nullopt;
 
@@ -32,13 +32,13 @@ private:
   }
 
 public:
-  explicit MarketDataClientT(const Env &env)
+  explicit MarketDataClientT(const Env &env) noexcept
       : env_(env), cli_(env_.GetDataUrl(), env_.GetAuthHeaders()) {}
 
-  MarketDataClientT(const Env &env, Http cli)
+  MarketDataClientT(const Env &env, Http cli) noexcept
       : env_(env), cli_(std::move(cli)) {}
 
-  std::expected<Bars, APIError> GetBars(const BarParams &p) {
+  std::expected<Bars, APIError> GetBars(const BarParams &p) noexcept {
     std::map<std::string, std::vector<Bar>> barsBySymbol;
     std::optional<std::string> page;
 
@@ -72,7 +72,8 @@ public:
     return Bars{barsBySymbol};
   }
 
-  std::expected<LatestBars, APIError> GetLatestBar(const LatestBarParam &p) {
+  std::expected<LatestBars, APIError>
+  GetLatestBar(const LatestBarParam &p) noexcept {
     utils::QueryBuilder qb;
     qb.add("symbols", utils::SymbolsEncode(p.symbols));
     qb.add("feed", ToString(p.feed));

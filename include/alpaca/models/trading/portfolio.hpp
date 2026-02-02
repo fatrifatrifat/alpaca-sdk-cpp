@@ -36,7 +36,7 @@ struct Portfolio {
 };
 
 constexpr std::optional<std::string_view>
-ToString(std::optional<IntradayReporting> i) {
+ToString(std::optional<IntradayReporting> i) noexcept {
   if (!i) {
     return std::nullopt;
   }
@@ -53,7 +53,8 @@ ToString(std::optional<IntradayReporting> i) {
   }
 }
 
-constexpr std::optional<std::string_view> ToString(std::optional<PNLReset> i) {
+constexpr std::optional<std::string_view>
+ToString(std::optional<PNLReset> i) noexcept {
   if (!i) {
     return std::nullopt;
   }

@@ -114,7 +114,7 @@ struct OrderRequestWire {
   std::optional<PositionIntent> positionIntent;
 };
 
-inline OrderRequestWire toWire(const OrderRequestParam &r) {
+inline OrderRequestWire toWire(const OrderRequestParam &r) noexcept {
   OrderRequestWire w{};
   w.symbol = r.symbol;
   w.side = r.side;
@@ -157,7 +157,7 @@ inline OrderRequestWire toWire(const OrderRequestParam &r) {
 }
 
 inline std::optional<std::string> fromWire(OrderRequestParam &r,
-                                           const OrderRequestWire &w) {
+                                           const OrderRequestWire &w) noexcept {
   r.symbol = w.symbol;
   r.side = w.side;
   r.type = w.type;
@@ -277,7 +277,7 @@ struct ReplaceOrderParam {
 };
 
 constexpr std::optional<std::string_view>
-ToString(std::optional<OrderStatus> d) {
+ToString(std::optional<OrderStatus> d) noexcept {
   if (!d) {
     return std::nullopt;
   }
@@ -295,7 +295,7 @@ ToString(std::optional<OrderStatus> d) {
 }
 
 constexpr std::optional<std::string_view>
-ToString(std::optional<OrderDirection> d) {
+ToString(std::optional<OrderDirection> d) noexcept {
   if (!d) {
     return std::nullopt;
   }
@@ -310,7 +310,8 @@ ToString(std::optional<OrderDirection> d) {
   }
 }
 
-constexpr std::optional<std::string_view> ToString(std::optional<OrderSide> d) {
+constexpr std::optional<std::string_view>
+ToString(std::optional<OrderSide> d) noexcept {
   if (!d) {
     return std::nullopt;
   }
@@ -326,7 +327,7 @@ constexpr std::optional<std::string_view> ToString(std::optional<OrderSide> d) {
 }
 
 constexpr std::optional<std::string_view>
-ToString(std::optional<OrderAssetClass> d) {
+ToString(std::optional<OrderAssetClass> d) noexcept {
   if (!d) {
     return std::nullopt;
   }

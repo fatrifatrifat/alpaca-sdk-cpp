@@ -11,7 +11,7 @@ template <class Env = Environment, class Http = HttpClient>
 class TradingClientT {
 private:
   static constexpr std::expected<std::string, std::string>
-  BuildClosePositionQuery(const LiquidationAmount &a) {
+  BuildClosePositionQuery(const LiquidationAmount &a) noexcept {
     return std::visit(
         [](auto &&x) -> std::expected<std::string, std::string> {
           using X = std::decay_t<decltype(x)>;
@@ -31,18 +31,19 @@ private:
   }
 
 public:
-  explicit TradingClientT(const Env &env)
+  explicit TradingClientT(const Env &env) noexcept
       : env_(env), cli_(env_.GetBaseUrl(), env_.GetAuthHeaders()) {}
 
-  TradingClientT(const Env &env, Http cli) : env_(env), cli_(std::move(cli)) {}
+  TradingClientT(const Env &env, Http cli) noexcept
+      : env_(env), cli_(std::move(cli)) {}
 
-  std::expected<Account, APIError> GetAccount() {
+  std::expected<Account, APIError> GetAccount() noexcept {
     const auto &query = ACCOUNT_ENDPOINT;
     return cli_.template Request<Account>(Req::GET, query);
   }
 
   std::expected<OrderResponse, APIError>
-  SubmitOrder(const OrderRequestParam &request) {
+  SubmitOrder(const OrderRequestParam &request) noexcept {
     std::expected<std::string, glz::error_ctx> order_request;
     order_request = glz::write_json(request);
     if (!order_request) {
@@ -55,18 +56,19 @@ public:
         Req::POST, query, order_request.value(), "application/json");
   }
 
-  std::expected<Positions, APIError> GetAllOpenPositions() {
+  std::expected<Positions, APIError> GetAllOpenPositions() noexcept {
     const auto &query = POSITIONS_ENDPOINT;
     return cli_.template Request<Positions>(Req::GET, query);
   }
 
-  std::expected<Position, APIError> GetOpenPosition(const std::string &symbol) {
+  std::expected<Position, APIError>
+  GetOpenPosition(const std::string &symbol) noexcept {
     const auto query = std::format("{}/{}", POSITIONS_ENDPOINT, symbol);
     return cli_.template Request<Position>(Req::GET, query);
   }
 
   std::expected<OrderResponse, APIError>
-  ClosePosition(const ClosePositionParams &cpp) {
+  ClosePosition(const ClosePositionParams &cpp) noexcept {
     const auto qtyQuery = BuildClosePositionQuery(cpp.amt);
     if (!qtyQuery) {
       return std::unexpected(
@@ -78,13 +80,13 @@ public:
     return cli_.template Request<OrderResponse>(Req::DELETE, query);
   }
 
-  std::expected<Clock, APIError> GetMarketClockInfo() {
+  std::expected<Clock, APIError> GetMarketClockInfo() noexcept {
     const auto &query = CLOCK_ENDPOINT;
     return cli_.template Request<Clock>(Req::GET, query);
   }
 
   std::expected<CalendarResponse, APIError>
-  GetMarketCalendarInfo(const CalendarRequest &c = {}) {
+  GetMarketCalendarInfo(const CalendarRequest &c = {}) noexcept {
     utils::QueryBuilder qb;
     qb.add("start", c.start);
     qb.add("end", c.end);
@@ -94,7 +96,7 @@ public:
   }
 
   std::expected<std::vector<OrderResponse>, APIError>
-  GetAllOrders(const OrderListParam &o = {}) {
+  GetAllOrders(const OrderListParam &o = {}) noexcept {
     auto limit =
         o.limit ? std::make_optional(std::to_string(*o.limit)) : std::nullopt;
     auto nested = o.nested ? std::make_optional(*o.nested ? "true" : "false")
@@ -124,7 +126,7 @@ public:
     return cli_.template Request<std::vector<OrderResponse>>(Req::GET, query);
   }
 
-  std::expected<OrderID, APIError> DeleteAllOrders() {
+  std::expected<OrderID, APIError> DeleteAllOrders() noexcept {
     const auto &query = ORDERS_ENDPOINT;
     return cli_.template Request<OrderID>(Req::DELETE, query);
   }
@@ -140,7 +142,7 @@ public:
 
   std::expected<OrderResponse, APIError>
   GetOrderByID(std::string_view orderID,
-               std::optional<bool> nstd = std::nullopt) {
+               std::optional<bool> nstd = std::nullopt) noexcept {
     auto nested =
         nstd ? std::make_optional((*nstd ? "true" : "false")) : std::nullopt;
 
@@ -151,7 +153,8 @@ public:
   }
 
   std::expected<OrderResponse, APIError>
-  ReplaceOrderByID(std::string_view orderID, const ReplaceOrderParam &r) {
+  ReplaceOrderByID(std::string_view orderID,
+                   const ReplaceOrderParam &r) noexcept {
     std::expected<std::string, glz::error_ctx> order_request;
     order_request = glz::write_json(r);
     if (!order_request) {
@@ -164,13 +167,13 @@ public:
   }
 
   std::expected<std::monostate, APIError>
-  DeleteOrderByID(std::string_view orderID) {
+  DeleteOrderByID(std::string_view orderID) noexcept {
     const auto query = std::format("{}/{}", ORDERS_ENDPOINT, orderID);
     return cli_.template Request<std::monostate>(Req::DELETE, query);
   }
 
   std::expected<Portfolio, APIError>
-  GetPortfolioHistory(const PortfolioParam &p) {
+  GetPortfolioHistory(const PortfolioParam &p) noexcept {
     utils::QueryBuilder qb;
     qb.add("period", p.period);
     qb.add("timeframe", p.timeframe);

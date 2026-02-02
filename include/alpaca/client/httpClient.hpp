@@ -45,7 +45,7 @@ enum class Req {
 
 class HttpClient {
 private:
-  static std::string to_string(httplib::Error e) {
+  static std::string to_string(httplib::Error e) noexcept {
     switch (e) {
     case httplib::Error::Success:
       return "Success";
@@ -75,14 +75,15 @@ private:
   }
 
 public:
-  explicit HttpClient(const std::string &host, const httplib::Headers &headers)
+  explicit HttpClient(const std::string &host,
+                      const httplib::Headers &headers) noexcept
       : cli_(host), headers_(headers) {}
 
   template <typename T>
   std::expected<T, APIError>
   Request(Req type, const std::string &path,
           std::optional<std::string> body = std::nullopt,
-          std::optional<std::string> content_type = std::nullopt) {
+          std::optional<std::string> content_type = std::nullopt) noexcept {
     if (!cli_.is_valid()) {
       return std::unexpected(APIError{
           ErrorCode::InvalidClient,

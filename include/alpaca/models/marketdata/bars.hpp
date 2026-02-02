@@ -60,7 +60,8 @@ struct LatestBars {
   std::map<std::string, Bar> bars;
 };
 
-constexpr std::optional<std::string_view> ToString(std::optional<BarFeed> f) {
+constexpr std::optional<std::string_view>
+ToString(std::optional<BarFeed> f) noexcept {
   if (!f) {
     return std::nullopt;
   }
@@ -80,7 +81,7 @@ constexpr std::optional<std::string_view> ToString(std::optional<BarFeed> f) {
 }
 
 constexpr std::optional<std::string_view>
-ToString(std::optional<BarAdjustment> a) {
+ToString(std::optional<BarAdjustment> a) noexcept {
   if (!a) {
     return std::nullopt;
   }
@@ -101,7 +102,8 @@ ToString(std::optional<BarAdjustment> a) {
   }
 }
 
-constexpr std::optional<std::string_view> ToString(std::optional<BarSort> s) {
+constexpr std::optional<std::string_view>
+ToString(std::optional<BarSort> s) noexcept {
   if (!s) {
     return std::nullopt;
   }
