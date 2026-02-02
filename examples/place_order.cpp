@@ -2,14 +2,15 @@
 
 using namespace alpaca;
 
-static bool has_yes_flag(int argc, char** argv) {
+static bool has_yes_flag(int argc, char **argv) {
   for (int i = 1; i < argc; ++i) {
-    if (std::string_view{argv[i]} == "--yes") return true;
+    if (std::string_view{argv[i]} == "--yes")
+      return true;
   }
   return false;
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   if (argc < 4) {
     std::println("Usage: {} SYMBOL buy|sell QTY [--yes]", argv[0]);
     std::println("Example: {} AAPL buy 1 --yes", argv[0]);
@@ -30,7 +31,7 @@ int main(int argc, char** argv) {
     return 2;
   }
 
-  OrderRequest r{};
+  OrderRequestParam r{};
   r.symbol = symbol;
   r.amt = Quantity{qty};
   r.side = side;
@@ -42,8 +43,8 @@ int main(int argc, char** argv) {
 
   if (!has_yes_flag(argc, argv)) {
     std::println("Dry-run (no order sent). Add --yes to submit.");
-    std::println("Would submit: symbol={} side={} qty={}",
-                 r.symbol, ToString(r.side).value_or("?"), qty);
+    std::println("Would submit: symbol={} side={} qty={}", r.symbol,
+                 ToString(r.side).value_or("?"), qty);
     return 0;
   }
 
