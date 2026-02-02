@@ -13,7 +13,7 @@ if (MSVC)
 endif()
 
 option(ALPACA_ENABLE_SSL "Enable HTTPS support (OpenSSL) for cpp-httplib" ON)
-option(ALPACA_BUILD_EXAMPLES "Build examples/ executables" ON)
+option(ALPACA_BUILD_EXAMPLES "Build examples/ executables" OFF)
 option(ALPACA_BUILD_TESTS "Build unit/integration tests" OFF)
 
 include(FetchContent)
