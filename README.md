@@ -1,8 +1,10 @@
 # Alpaca C++ SDK (Modern)
 
-A modern, strongly-typed C++ SDK for the Alpaca Trading API and Market Data API, built with clarity, correctness, and modern C++ design in mind.
+A modern, strongly-typed C++23 SDK for Alpaca’s Trading and Market Data REST APIs.
 
-This project is intentionally small, explicit, and predictable. This project was originally designed to be used for [QUARCC](https://quarcc.com/) as a more modern and maintained replacement to the already existing [community SDK](https://github.com/marpaia/alpaca-trade-api-cpp) 
+Built as a small header-only library with explicit models and `std::expected`-based error handling (no exceptions).
+
+This project was originally designed to be used for [QUARCC](https://quarcc.com/) as a maintained alternative to the [community SDK](https://github.com/marpaia/alpaca-trade-api-cpp) 
 
 ---
 
@@ -19,13 +21,24 @@ This project is intentionally small, explicit, and predictable. This project was
   - `HttpClient` for transport
   - `TradingClient` and `MarketDataClient` for domain logic
 - **Deterministic behavior**
-  - No hidden retries
   - No global state
   - No exceptions thrown by the SDK
 - **Automatic pagination**
   - Market-data endpoints aggregate results safely
 
 ---
+
+## Currently Supported Endpoints
+
+- **Trading**
+  - [Account](https://docs.alpaca.markets/reference/getaccount-1)
+  - [Calendar](https://docs.alpaca.markets/reference/getcalendar-1)
+  - [Clock](https://docs.alpaca.markets/reference/getclock-1)
+  - [Orders](https://docs.alpaca.markets/reference/postorder)
+  - [Portfolio](https://docs.alpaca.markets/reference/getaccountportfoliohistory-1)
+  - [Position](https://docs.alpaca.markets/reference/getallopenpositions)
+- **Market**
+  - [Bars](https://docs.alpaca.markets/reference/stockauctions-1) 
 
 ## Authentication
 
@@ -121,77 +134,38 @@ The future plans for this SDK is to add:
 
 - Streaming / WebSocket APIs
 - Async or coroutine interfaces
-- Automatic retry / backoff logic
+- Optional automatic retry / backoff logic
 
 ## Install
 
-**Prerequesites**
-- C++ 23
+**Prerequisites**
+- C++23
 - OpenSSL
-- CMake 3.23 at least
+- CMake ≥ 3.23
 
-**Linux:**
-
-Installing the library
-
-```bash
-git clone https://github.com/fatrifatrifat/alpaca-sdk-cpp"
-cd alpaca-sdk-cpp/
-
-cmake -S . -B build \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_INSTALL_PREFIX=$HOME/.local \
-  -DALPACA_BUILD_EXAMPLES=OFF \
-  -DALPACA_BUILD_TESTS=OFF \
-  -DALPACA_ENABLE_SSL=ON
-
-cmake --build build -j
-cmake  --install build 
-```
-
-After install, the package config will typically be located at:
-
-```bash
-$HOME/.local/lib/cmake/alpaca_sdk/
-```
-
-Create your CMakeLists.txt file:
-
+**Recommended: Use with CMake (FetchContent)**
 ```cmake
-cmake_minimum_required(VERSION 3.23)
-project(my_app LANGUAGES CXX)
+include(FetchContent)
 
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+set(ALPACA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(ALPACA_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(ALPACA_ENABLE_SSL ON CACHE BOOL "" FORCE)
 
-# If you installed into a custom prefix (like ~/.local),
-# add it so CMake can locate alpaca_sdkConfig.cmake
-list(APPEND CMAKE_PREFIX_PATH "$ENV{HOME}/.local")
-
-find_package(alpaca_sdk CONFIG REQUIRED)
+FetchContent_Declare(
+  alpaca_sdk
+  GIT_REPOSITORY https://github.com/fatrifatrifat/alpaca-sdk-cpp.git
+  GIT_TAG master
+)
+FetchContent_MakeAvailable(alpaca_sdk)
 
 add_executable(my_app src/main.cpp)
 target_link_libraries(my_app PRIVATE alpaca::alpaca_sdk)
 ```
 
-Include in your main file:
-
-```cpp
-#include <alpaca/alpaca.hpp>
-
-int main() {
-  // ...
-}
-```
-
-Build and run your project:
-
+Build:
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j
-
-./build/my_app
 ```
 
 ## Used Dependencies
@@ -202,3 +176,7 @@ cmake --build build -j
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
+
+---
+
+**This project is not affiliated with or endorsed by Alpaca Markets.**
