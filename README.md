@@ -123,14 +123,81 @@ The future plans for this SDK is to add:
 - Async or coroutine interfaces
 - Automatic retry / backoff logic
 
-## Requirements
+## Install
 
+**Prerequesites**
 - C++ 23
 - OpenSSL
-- Dependencies:
+- CMake 3.23 at least
+
+**Linux:**
+
+Installing the library
+
+```bash
+git clone https://github.com/fatrifatrifat/alpaca-sdk-cpp"
+cd alpaca-sdk-cpp/
+
+cmake -S . -B build \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX=$HOME/.local \
+  -DALPACA_BUILD_EXAMPLES=OFF \
+  -DALPACA_BUILD_TESTS=OFF \
+  -DALPACA_ENABLE_SSL=ON
+
+cmake --build build -j
+cmake  --install build 
+```
+
+After install, the package config will typically be located at:
+
+```bash
+$HOME/.local/lib/cmake/alpaca_sdk/
+```
+
+Create your CMakeLists.txt file:
+
+```cmake
+cmake_minimum_required(VERSION 3.23)
+project(my_app LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# If you installed into a custom prefix (like ~/.local),
+# add it so CMake can locate alpaca_sdkConfig.cmake
+list(APPEND CMAKE_PREFIX_PATH "$ENV{HOME}/.local")
+
+find_package(alpaca_sdk CONFIG REQUIRED)
+
+add_executable(my_app src/main.cpp)
+target_link_libraries(my_app PRIVATE alpaca::alpaca_sdk)
+```
+
+Include in your main file:
+
+```cpp
+#include <alpaca/alpaca.hpp>
+
+int main() {
+  // ...
+}
+```
+
+Build and run your project:
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+
+./build/my_app
+```
+
+## Used Dependencies
+
   - [`cpp-httplib`](https://github.com/yhirose/cpp-httplib)
   - [`glaze`](https://github.com/stephenberry/glaze)
-
 
 ## License
 
