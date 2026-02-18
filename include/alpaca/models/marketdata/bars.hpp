@@ -34,7 +34,7 @@ struct Bar {
 
 struct Bars {
   std::map<std::string, std::vector<Bar>> bars;
-  std::optional<std::string> next_page_token;
+  std::optional<std::string> next_page_token = std::nullopt;
 };
 
 struct BarParams {

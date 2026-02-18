@@ -142,8 +142,8 @@ public:
   }
 
 private:
-  const httplib::Headers headers_;
   httplib::SSLClient cli_;
+  const httplib::Headers headers_;
 };
 
 }; // namespace alpaca
