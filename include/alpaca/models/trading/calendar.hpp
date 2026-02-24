@@ -10,12 +10,12 @@ struct CalendarRequest {
 };
 
 struct Calendar {
-  std::string close;
-  std::string date;
-  std::string open;
-  std::optional<std::string> session_close;
-  std::optional<std::string> session_open;
-  std::string settlementDate;
+  std::string close{};
+  std::string date{};
+  std::string open{};
+  std::optional<std::string> session_close = std::nullopt;
+  std::optional<std::string> session_open = std::nullopt;
+  std::string settlementDate{};
 };
 
 using CalendarResponse = std::vector<Calendar>;

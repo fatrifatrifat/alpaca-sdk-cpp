@@ -18,16 +18,16 @@ enum class OrderDirection { asc, desc };
 enum class OrderAssetClass { us_equity, us_option, crypto, all };
 
 struct Leg {
-  std::string symbol;
-  long double ratioQty;
-  std::optional<OrderSide> side;
-  std::optional<PositionIntent> positionIntent;
+  std::string symbol{};
+  long double ratioQty{};
+  std::optional<OrderSide> side = std::nullopt;
+  std::optional<PositionIntent> positionIntent = std::nullopt;
   auto operator<=>(const Leg &) const = default;
 };
 
 struct LegsResponse {
-  std::string id;
-  std::string clientOrderID;
+  std::string id{};
+  std::string clientOrderID{};
   auto operator<=>(const LegsResponse &) const = default;
 };
 
@@ -67,51 +67,51 @@ struct StopLoss {
 };
 
 struct OrderRequestParam {
-  std::string symbol;
-  ShareAmount amt;
-  OrderSide side;
-  OrderType type;
-  OrderTimeInForce timeInForce;
+  std::string symbol{};
+  ShareAmount amt{};
+  OrderSide side{};
+  OrderType type{};
+  OrderTimeInForce timeInForce{};
 
-  std::optional<LimitPrice> limitPrice;
-  std::optional<StopPrice> stopPrice;
+  std::optional<LimitPrice> limitPrice = std::nullopt;
+  std::optional<StopPrice> stopPrice = std::nullopt;
 
-  std::optional<TrailAmount> trailAmt;
+  std::optional<TrailAmount> trailAmt = std::nullopt;
 
-  std::optional<bool> extendedHours;
-  std::optional<std::string> clientOrderID;
-  std::optional<OrderClass> orderClass;
-  std::optional<Legs> legs;
+  std::optional<bool> extendedHours = std::nullopt;
+  std::optional<std::string> clientOrderID = std::nullopt;
+  std::optional<OrderClass> orderClass = std::nullopt;
+  std::optional<Legs> legs = std::nullopt;
 
-  std::optional<TakeProfit> takeProfit;
-  std::optional<StopLoss> stopLoss;
-  std::optional<PositionIntent> positionIntent;
+  std::optional<TakeProfit> takeProfit = std::nullopt;
+  std::optional<StopLoss> stopLoss = std::nullopt;
+  std::optional<PositionIntent> positionIntent = std::nullopt;
 };
 
 struct OrderRequestWire {
-  std::string symbol;
+  std::string symbol{};
 
-  std::optional<long double> qty;
-  std::optional<long double> notional;
+  std::optional<long double> qty = std::nullopt;
+  std::optional<long double> notional = std::nullopt;
 
-  OrderSide side;
-  OrderType type;
-  OrderTimeInForce timeInForce;
+  OrderSide side{};
+  OrderType type{};
+  OrderTimeInForce timeInForce{};
 
-  std::optional<LimitPrice> limitPrice;
-  std::optional<StopPrice> stopPrice;
+  std::optional<LimitPrice> limitPrice = std::nullopt;
+  std::optional<StopPrice> stopPrice = std::nullopt;
 
-  std::optional<bool> extendedHours;
-  std::optional<std::string> clientOrderID;
-  std::optional<OrderClass> orderClass;
-  std::optional<Legs> legs;
+  std::optional<bool> extendedHours = std::nullopt;
+  std::optional<std::string> clientOrderID = std::nullopt;
+  std::optional<OrderClass> orderClass = std::nullopt;
+  std::optional<Legs> legs = std::nullopt;
 
-  std::optional<long double> trailPrice;
-  std::optional<long double> trailPercent;
+  std::optional<long double> trailPrice = std::nullopt;
+  std::optional<long double> trailPercent = std::nullopt;
 
-  std::optional<TakeProfit> takeProfit;
-  std::optional<StopLoss> stopLoss;
-  std::optional<PositionIntent> positionIntent;
+  std::optional<TakeProfit> takeProfit = std::nullopt;
+  std::optional<StopLoss> stopLoss = std::nullopt;
+  std::optional<PositionIntent> positionIntent = std::nullopt;
 };
 
 inline OrderRequestWire toWire(const OrderRequestParam &r) noexcept {
@@ -205,61 +205,61 @@ struct OrderResponse {
   std::string updatedAt;
   std::string submittedAt;
 
-  std::optional<std::string> filledAt;
-  std::optional<std::string> expiredAt;
-  std::optional<std::string> canceledAt;
-  std::optional<std::string> failedAt;
-  std::optional<std::string> replacedAt;
+  std::optional<std::string> filledAt = std::nullopt;
+  std::optional<std::string> expiredAt = std::nullopt;
+  std::optional<std::string> canceledAt = std::nullopt;
+  std::optional<std::string> failedAt = std::nullopt;
+  std::optional<std::string> replacedAt = std::nullopt;
 
-  std::optional<std::string> replacedBy;
-  std::optional<std::string> replaces;
+  std::optional<std::string> replacedBy = std::nullopt;
+  std::optional<std::string> replaces = std::nullopt;
 
-  std::optional<std::string> assetID;
-  std::optional<std::string> symbol;
-  std::optional<std::string> assetClass;
+  std::optional<std::string> assetID = std::nullopt;
+  std::optional<std::string> symbol = std::nullopt;
+  std::optional<std::string> assetClass = std::nullopt;
 
-  std::optional<std::string> notional;
-  std::optional<std::string> qty;
+  std::optional<std::string> notional = std::nullopt;
+  std::optional<std::string> qty = std::nullopt;
 
   std::string filledQty;
-  std::optional<std::string> filledAvgPrice;
+  std::optional<std::string> filledAvgPrice = std::nullopt;
 
-  std::optional<std::string> orderClass;
+  std::optional<std::string> orderClass = std::nullopt;
   std::string orderType;
   OrderType type;
   OrderSide side;
 
   OrderTimeInForce timeInForce;
-  std::optional<std::string> limitPrice;
-  std::optional<std::string> stopPrice;
+  std::optional<std::string> limitPrice = std::nullopt;
+  std::optional<std::string> stopPrice = std::nullopt;
 
   std::string status;
 
-  std::optional<std::string> position_intent;
+  std::optional<std::string> position_intent = std::nullopt;
 
   bool extendedHours{false};
 
-  std::optional<glz::generic> legs;
-  std::optional<std::string> trailPercent;
-  std::optional<std::string> trailPrice;
-  std::optional<std::string> hwm;
+  std::optional<glz::generic> legs = std::nullopt;
+  std::optional<std::string> trailPercent = std::nullopt;
+  std::optional<std::string> trailPrice = std::nullopt;
+  std::optional<std::string> hwm = std::nullopt;
 
-  std::optional<std::string> subtag;
-  std::optional<std::string> source;
+  std::optional<std::string> subtag = std::nullopt;
+  std::optional<std::string> source = std::nullopt;
 };
 
 struct OrderListParam {
-  std::optional<OrderStatus> status;
-  std::optional<uint32_t> limit;
-  std::optional<std::string> after;
-  std::optional<std::string> until;
-  std::optional<OrderDirection> direction;
-  std::optional<bool> nested;
-  std::optional<std::vector<std::string>> symbols;
-  std::optional<OrderSide> side;
-  std::optional<std::vector<OrderAssetClass>> assetClass;
-  std::optional<std::string> beforeOrderID;
-  std::optional<std::string> afterOrderID;
+  std::optional<OrderStatus> status = std::nullopt;
+  std::optional<uint32_t> limit = std::nullopt;
+  std::optional<std::string> after = std::nullopt;
+  std::optional<std::string> until = std::nullopt;
+  std::optional<OrderDirection> direction = std::nullopt;
+  std::optional<bool> nested = std::nullopt;
+  std::optional<std::vector<std::string>> symbols = std::nullopt;
+  std::optional<OrderSide> side = std::nullopt;
+  std::optional<std::vector<OrderAssetClass>> assetClass = std::nullopt;
+  std::optional<std::string> beforeOrderID = std::nullopt;
+  std::optional<std::string> afterOrderID = std::nullopt;
 };
 
 struct OrderID {
@@ -268,12 +268,12 @@ struct OrderID {
 };
 
 struct ReplaceOrderParam {
-  std::optional<long double> qty;
-  std::optional<OrderTimeInForce> timeInForce;
-  std::optional<long double> limitPrice;
-  std::optional<long double> stopPrice;
-  std::optional<long double> trail;
-  std::optional<std::string> clientOrderID;
+  std::optional<long double> qty = std::nullopt;
+  std::optional<OrderTimeInForce> timeInForce = std::nullopt;
+  std::optional<long double> limitPrice = std::nullopt;
+  std::optional<long double> stopPrice = std::nullopt;
+  std::optional<long double> trail = std::nullopt;
+  std::optional<std::string> clientOrderID = std::nullopt;
 };
 
 constexpr std::optional<std::string_view>

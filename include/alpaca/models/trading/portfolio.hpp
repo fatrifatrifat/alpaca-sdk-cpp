@@ -14,25 +14,25 @@ enum class PNLReset {
 };
 
 struct PortfolioParam {
-  std::optional<std::string> period;
-  std::optional<std::string> timeframe;
-  std::optional<IntradayReporting> intradayReporting;
-  std::optional<std::string> start;
-  std::optional<PNLReset> pnlReset;
-  std::optional<std::string> end;
-  std::optional<std::string> extendedHours;
-  std::optional<std::string> cashflowTypes;
+  std::optional<std::string> period = std::nullopt;
+  std::optional<std::string> timeframe = std::nullopt;
+  std::optional<IntradayReporting> intradayReporting = std::nullopt;
+  std::optional<std::string> start = std::nullopt;
+  std::optional<PNLReset> pnlReset = std::nullopt;
+  std::optional<std::string> end = std::nullopt;
+  std::optional<std::string> extendedHours = std::nullopt;
+  std::optional<std::string> cashflowTypes = std::nullopt;
 };
 
 struct Portfolio {
-  std::vector<double> timestamp;
-  std::vector<double> equity;
-  std::vector<double> profitLoss;
-  std::vector<double> profitLossPCT;
-  double baseValue;
-  std::optional<std::string> baseValueAsof;
-  std::string timeframe;
-  std::optional<glz::generic> cashflow;
+  std::vector<double> timestamp{};
+  std::vector<double> equity{};
+  std::vector<double> profitLoss{};
+  std::vector<double> profitLossPCT{};
+  double baseValue{};
+  std::optional<std::string> baseValueAsof = std::nullopt;
+  std::string timeframe{};
+  std::optional<glz::generic> cashflow = std::nullopt;
 };
 
 constexpr std::optional<std::string_view>

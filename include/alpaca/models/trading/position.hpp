@@ -6,28 +6,28 @@ namespace alpaca {
 enum class PositionExchange { AMEX, ARCA, BATS, NYSE, NASDAQ, NYSEARCA, OTC };
 
 struct Position {
-  std::string assetID;
-  std::string symbol;
-  PositionExchange exchange;
-  std::string assetClass;
+  std::string assetID{};
+  std::string symbol{};
+  PositionExchange exchange{};
+  std::string assetClass{};
   bool assetMarginable{};
 
-  std::string qty;
-  std::string avgEntryPrice;
-  std::string side;
-  std::string marketValue;
-  std::string costBasis;
+  std::string qty{};
+  std::string avgEntryPrice{};
+  std::string side{};
+  std::string marketValue{};
+  std::string costBasis{};
 
-  std::string unrealizedPL;
-  std::string unrealizedPLPC;
-  std::string unrealizedIntradayPL;
-  std::string unrealizedIntradayPLPC;
+  std::string unrealizedPL{};
+  std::string unrealizedPLPC{};
+  std::string unrealizedIntradayPL{};
+  std::string unrealizedIntradayPLPC{};
 
-  std::string currentPrice;
-  std::string lastDayPrice;
-  std::string changeToday;
+  std::string currentPrice{};
+  std::string lastDayPrice{};
+  std::string changeToday{};
 
-  std::string qtyAvailable;
+  std::string qtyAvailable{};
 };
 
 using Positions = std::vector<Position>;
@@ -43,8 +43,8 @@ struct Percent {
 using LiquidationAmount = std::variant<Shares, Percent>;
 
 struct ClosePositionParams {
-  std::string symbol_or_asset_id;
-  LiquidationAmount amt;
+  std::string symbol_or_asset_id{};
+  LiquidationAmount amt{};
 };
 
 }; // namespace alpaca

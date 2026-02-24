@@ -27,37 +27,37 @@ struct Bar {
   double close{}, high{}, low{};
   long long number_of_trades{};
   double open{};
-  std::string timestamp;
+  std::string timestamp{};
   long long volume{};
   double volume_weigted_price{};
 };
 
 struct Bars {
-  std::map<std::string, std::vector<Bar>> bars;
+  std::map<std::string, std::vector<Bar>> bars{};
   std::optional<std::string> next_page_token = std::nullopt;
 };
 
 struct BarParams {
-  std::vector<std::string> symbols;
+  std::vector<std::string> symbols{};
   std::string timeframe{"1D"};
   std::string start{"2024-01-03T00:00:00Z"};
   std::string end{"2024-01-04T00:00:00Z"};
-  std::optional<int> limit;
-  std::optional<BarFeed> feed;
-  std::optional<std::string> page_token;
-  std::optional<BarAdjustment> adjustment;
-  std::optional<std::string> asof;
-  std::optional<std::string> currency;
-  std::optional<BarSort> sort;
+  std::optional<int> limit = std::nullopt;
+  std::optional<BarFeed> feed = std::nullopt;
+  std::optional<std::string> page_token = std::nullopt;
+  std::optional<BarAdjustment> adjustment = std::nullopt;
+  std::optional<std::string> asof = std::nullopt;
+  std::optional<std::string> currency = std::nullopt;
+  std::optional<BarSort> sort = std::nullopt;
 };
 
 struct LatestBarParam {
-  std::vector<std::string> symbols;
-  std::optional<BarFeed> feed;
+  std::vector<std::string> symbols{};
+  std::optional<BarFeed> feed = std::nullopt;
 };
 
 struct LatestBars {
-  std::map<std::string, Bar> bars;
+  std::map<std::string, Bar> bars{};
 };
 
 constexpr std::optional<std::string_view>
