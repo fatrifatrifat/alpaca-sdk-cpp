@@ -34,6 +34,16 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(httplib)
 
+FetchContent_Declare(
+  ixwebsocket
+  GIT_REPOSITORY https://github.com/machinezone/IXWebSocket.git
+  GIT_TAG        master
+  GIT_SHALLOW    TRUE
+)
+set(USE_TLS ON CACHE BOOL "" FORCE)
+set(IXWEBSOCKET_INSTALL OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(ixwebsocket)
+
 if (ALPACA_ENABLE_SSL)
   find_package(OpenSSL REQUIRED)
 endif()
@@ -54,6 +64,7 @@ target_link_libraries(alpaca_sdk
   INTERFACE
     glaze::glaze
     httplib::httplib
+    ixwebsocket::ixwebsocket
 )
 
 if (ALPACA_ENABLE_SSL)

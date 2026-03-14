@@ -33,6 +33,14 @@ public:
   const std::string &GetBaseUrl() const { return api_base_url_; }
   const std::string &GetDataUrl() const { return api_data_url_; }
 
+  // WebSocket URLs
+  std::string GetTradeStreamUrl() const {
+    return "wss://" + api_base_url_ + "/stream";
+  }
+  std::string GetStreamDataUrl(const std::string &feed) const {
+    return "wss://stream." + api_data_url_ + "/v2/" + feed;
+  }
+
   static constexpr const char *GetIDEnvKey() { return env_api_key_id_; }
   static constexpr const char *GetSecretEnvKey() { return env_api_secret_key_; }
   static constexpr const char *GetBaseUrlEnvKey() { return env_api_base_url_; }
